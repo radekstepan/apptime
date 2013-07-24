@@ -3,9 +3,49 @@
 <head>
     <meta charset="utf-8">
     <title>upp</title>
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700' rel='stylesheet' type='text/css'>
     <style><%- @css %></style>
 </head>
 <body>
-    <%- JSON.stringify @bands, null, 2 %>
+    <div id="header">
+        <h1>upp</h1>
+    </div>
+    <div id="wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <% for [ day, date ] in @days: %>
+                        <th>
+                            <h3><%= day %></h3>
+                            <h4><%= date %></h4>
+                        </th>
+                    <% end %>
+                </tr>
+            </thead>
+            <tbody>
+                <% for handler, names of @bands: %>
+                    <% for name, days of names: %>
+                        <tr>
+                            <th>
+                                <h2 title="<%= handler %>"><%= name %></h2>
+                            </th>
+                            <% for i, day of days: %>
+                                <td class="column<%= i %>">
+                                    <% if day.length isnt 0: %>
+                                        <div class="orange circle">
+                                            <span><%= day.pop().status %></span>
+                                        </div>
+                                    <% else: %>
+                                        <div class="green circle"><span>UP</span></div>
+                                    <% end %>
+                                </td>
+                            <% end %>
+                        </tr>
+                    <% end %>
+                <% end %>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

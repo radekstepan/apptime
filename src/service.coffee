@@ -96,6 +96,7 @@ one = ({ handler, name, command, success }, cb) ->
                     name: current.name
                     time: current.time
                     text: tmls[status.toLowerCase()]
+                    status: status
                 , cb
 
                 # TODO Mail it!
@@ -123,6 +124,8 @@ interval = setInterval all, config.timeout * 6e4
 respond = (files, res) -> # these are not the Droids blah blah...
     # When does today end? Cutoff on 7 days before that.
     cutoff = moment((new Date()).setHours(23,59,59,999)).subtract('days', 7)
+
+    days = []
 
     # Find all the events.
     async.waterfall [ (cb) ->
@@ -163,10 +166,14 @@ respond = (files, res) -> # these are not the Droids blah blah...
             # Remove them from the original pile.
             events = events.slice length
 
+            # Save for the renderer.
+            days.push cutoff.format('ddd D/M').split(' ')
+
         # Return.
         cb null, eco.render files['index.eco'],
             bands: bands
-            css: files['app.styl']
+            css: files['normalize.css'] + '\n' + files['app.styl']
+            days: days
 
     ], (err, html) ->
         # JSON bad
@@ -190,7 +197,7 @@ app.router.path '/', ->
     @get -> respond @res # this one is already partially applied!
 
 # Load all the files.
-async.map filenames = [ 'index.eco', 'app.styl' ], (filename, cb) ->
+async.map filenames = [ 'index.eco', 'app.styl', 'normalize.css' ], (filename, cb) ->
     fs.readFile dir + '/src/dashboard/' + filename, 'utf-8', (err, data) ->
         return cb err if err
         # Not Stylus is it?

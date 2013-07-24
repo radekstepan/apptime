@@ -32,12 +32,12 @@ module.exports =
             jobs:
                 'web0':
                     server: 'web0'
-        #         'ukraine':
-        #             server: 'ukraine'
+                'ukraine':
+                    server: 'ukraine'
 
-        # httping:
-        #     command: 'httping <%- @url %> -c 1'
-        #     success: '1 connects, 1 ok, 0.00% failed'
-        #     jobs:
-        #         'beta.flymine.org':
-        #             url: 'http://beta.flymine.org'
+        httping:
+            command: 'httping <%- @url %> -c 1'
+            success: '1 connects, 1 ok, 0.00% failed'
+            jobs:
+                'beta.flymine.org':
+                    url: 'http://beta.flymine.org'
