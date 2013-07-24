@@ -1,7 +1,7 @@
 {
     "name": "upp",
-    "version": "0.0.0",
-    "description": "Uptime monitoring mailing you when job status changes",
+    "version": "0.1.0",
+    "description": "Uptime monitoring linked to a mailer",
     "main": "index.js",
     "dependencies": {
         "coffee-script": "1.6.2",
