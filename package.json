@@ -14,7 +14,8 @@
         "async": "~0.2.9",
         "union": "~0.3.7",
         "node-logging": "~0.1.6",
-        "stylus": "~0.34.1"
+        "stylus": "~0.34.1",
+        "moment": "2.1.0"
     },
     "devDependencies": {},
     "scripts": {

@@ -20,7 +20,7 @@ module.exports =
         template:
             subject: 'Status alert: <%- @name %> is <%- @status %>'
             html:
-                up: '<%- @name %> is UP again at <%- @time %>, after <%- @since -> of downtime.'
+                up: '<%- @name %> is UP again on <%- @time %> after <%- @diff %> of downtime.'
                 down: '<%- @name %> is down since <%- @since %>.'
     
     # Commands we can do.

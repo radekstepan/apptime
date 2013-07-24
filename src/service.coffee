@@ -10,6 +10,7 @@ EJDB       = require 'ejdb'
 path       = require 'path'
 stylus     = require 'stylus'
 log        = require 'node-logging'
+moment     = require 'moment'
 fs         = _.extend require('fs'), require('fs-extra')
 
 # Root dir.
@@ -34,17 +35,64 @@ one = ({ command, success, name }, cb) ->
             return cb "Problem running regex `#{success}`"
 
         # Save the result.
-        jb.save 'updates', obj =
-            job: name
-            command: command
-            time: + new Date
-            status: if result then 'UP' else 'DOWN'
+        async.waterfall [ (cb) ->
+            jb.save 'updates', obj =
+                name: name
+                command: command
+                time: + new Date
+                status: if result then 'UP' else 'DOWN'
+            , (err) ->
+                delete obj.command
+                cb err, obj
         
-        # Log it.
-        log.inf "#{name} is #{obj.status}"
+        # Change of status check.
+        , (current, cb) ->
+            # Log it.
+            log.inf "#{name} is #{current.status}"
 
-        # Move on.
-        cb null
+            # Has the status changed?
+            jb.findOne 'status',
+                job: current.job
+            , (err, previous) ->
+                return cb err if err
+
+                # First save?
+                return jb.save('status', current, cb) unless previous
+
+                # A change of status?
+                # return cb null if previous.status is current.status
+                
+                # Save & mail then.
+                diff = moment(current.time).diff(moment(previous.time), 'minutes')
+
+                async.parallel [ (cb) ->
+                    # Save the new status.
+                    jb.update 'status',
+                        name: name
+                        '$set': current
+                    , cb
+
+                , (cb) ->
+                    # Render all email templates.
+                    tmls = _.cloneDeep config.email.template
+
+                    tmls = _.map [ tmls.subject, tmls.html.up, tmls.html.down ], (tml) ->
+                        dater = (int) -> moment(new Date(int)).format("ddd, HH:mm:ss")
+
+                        try
+                            tml = eco.render tml, _.extend _.clone(current),
+                                'diff': diff + 'm' # in minutes
+                                'time': dater current.time
+                                'since': dater previous.time
+                            return tml
+                        catch err
+                            return cb err
+
+                    console.log tmls
+
+                ], cb
+
+        ], cb
 
 # Make an array of jobs to run (errors will throw and die us).
 jobs = []
@@ -70,6 +118,7 @@ app.use flatiron.plugins.http
 # Root.
 app.router.path '/', ->
     @get ->
+        res = @res
         console.log 'HTTP /'
 
 # Startup.
