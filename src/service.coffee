@@ -79,7 +79,7 @@ one = ({ handler, name, command, success }, cb) ->
             , (cb) ->
                 tmls = {}
                 for name, tml of config.email.templates
-                    dater = (int) -> moment(new Date(int)).format('ddd, HH:mm:ss')
+                    dater = (int) -> moment(new Date(int)).format('ddd, HH:mm:ss')
 
                     try
                         tmls[name] = eco.render tml, _.extend _.clone(current),

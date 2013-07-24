@@ -1,3 +1,3 @@
 #upp
 
-Uptime monitoring mailing you when job status changes.
+Uptime monitoring linked to a mailer.
