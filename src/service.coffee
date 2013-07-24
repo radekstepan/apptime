@@ -40,19 +40,21 @@ one = ({ command, success, name }, cb) ->
                 name: name
                 command: command
                 time: + new Date
-                status: if result then 'UP' else 'DOWN'
+                up: result
             , (err) ->
                 delete obj.command
                 cb err, obj
         
         # Change of status check.
         , (current, cb) ->
+            status = [ 'UP', 'DOWN' ][+!result]
+
             # Log it.
-            log.inf "#{name} is #{current.status}"
+            log.inf "#{name} is #{status}"
 
             # Has the status changed?
             jb.findOne 'status',
-                job: current.job
+                name: current.name
             , (err, previous) ->
                 return cb err if err
 
@@ -60,30 +62,38 @@ one = ({ command, success, name }, cb) ->
                 return jb.save('status', current, cb) unless previous
 
                 # A change of status?
-                # return cb null if previous.status is current.status
+                return cb null if previous.up is current.up
                 
                 # Save & mail then.
                 diff = moment(current.time).diff(moment(previous.time), 'minutes')
 
                 async.parallel [ (cb) ->
-                    # Save the new status.
+                    # Save the new status and time.
                     jb.update 'status',
+                        '$set':
+                            time: current.time
+                            up: current.up
+                    ,
                         name: name
-                        '$set': current
                     , cb
 
                 , (cb) ->
                     # Render all email templates.
                     tmls = _.cloneDeep config.email.template
 
-                    tmls = _.map [ tmls.subject, tmls.html.up, tmls.html.down ], (tml) ->
-                        dater = (int) -> moment(new Date(int)).format("ddd, HH:mm:ss")
+                    tmls = _.map [
+                        tmls.subject
+                        tmls.html.up
+                        tmls.html.down
+                    ], (tml) ->
+                        dater = (int) -> moment(new Date(int)).format('ddd, HH:mm:ss')
 
                         try
                             tml = eco.render tml, _.extend _.clone(current),
                                 'diff': diff + 'm' # in minutes
                                 'time': dater current.time
                                 'since': dater previous.time
+                                'status': status
                             return tml
                         catch err
                             return cb err
