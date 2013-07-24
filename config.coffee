@@ -1,6 +1,6 @@
 module.exports =
     
-    # How often to check in minutes.
+    # How often to check (in minutes).
     timeout: 1
     
     # Email config, see `nodemailer`.
@@ -17,11 +17,10 @@ module.exports =
                 pass: 'password'
 
         # The template of an alert email.
-        template:
+        templates:
             subject: "Status alert: <%- @name %> is <%- @status %>"
-            html:
-                up: '<%- @name %> is UP again on <%- @time %> after <%- @diff %> of downtime.'
-                down: '<%- @name %> is down since <%- @since %>.'
+            up: '<%- @name %> is UP again on <%- @time %> after <%- @diff %> of downtime.'
+            down: '<%- @name %> is down since <%- @since %>.'
     
     # Commands we can do.
     handlers:
@@ -33,12 +32,12 @@ module.exports =
             jobs:
                 'web0':
                     server: 'web0'
-                'InterMine Labs':
-                    server: 'ukraine'
+        #         'ukraine':
+        #             server: 'ukraine'
 
-        httping:
-            command: 'httping <%- @url %> -c 1'
-            success: '1 connects, 1 ok, 0.00% failed'
-            jobs:
-                'FlyMine Beta':
-                    url: 'http://beta.flymine.org'
+        # httping:
+        #     command: 'httping <%- @url %> -c 1'
+        #     success: '1 connects, 1 ok, 0.00% failed'
+        #     jobs:
+        #         'beta.flymine.org':
+        #             url: 'http://beta.flymine.org'

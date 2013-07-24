@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <title>upp</title>
-    <style><%- @style %></style>
+    <style><%- @css %></style>
 </head>
 <body>
-
+    <%- JSON.stringify @bands, null, 2 %>
 </body>
 </html>
