@@ -22,86 +22,109 @@ config = require dir + '/config.coffee'
 # Open db.
 jb = EJDB.open dir + '/db/upp.ejdb'
 
-# Process one job.
-one = ({ handler, name, command, success }, cb) ->
-    # Run it.
-    exec command, (err, stdout, stderr) ->
-        return cb "Problem runnning `#{command}`" if err or stderr
+# Process one job, don't care when it ends.
+one = ({ handler, name, command, success }) ->
+    # Global.
+    previous = null ; current = time: + new Date, up: no
 
-        # Did it work?
-        try
-            result = success.test stdout
-        catch err
-            return cb "Problem running regex `#{success}`"
+    # Always save with our info.
+    me = (obj = {}) -> _.extend { handler: handler, name: name }, obj
 
-        #Current result.
-        current =
-            handler: handler
-            name: name
-            command: command
-            time: + new Date
-            up: result
-        
-        # Change of status check.
-        status = [ 'UP', 'DOWN' ][+!result]
+    # Nice date formatter.
+    dater = (int) -> moment(new Date(int)).format('ddd, HH:mm:ss')
 
+    # Get previous status.   
+    async.waterfall [ (cb) ->
+        jb.findOne 'status', me(), (err, obj) ->
+            previous = obj ; cb err
+
+    # Run the command.
+    , (cb) ->
+        exec command, (err, stdout, stderr) ->
+            return cb "Problem runnning `#{command}`" if err or stderr
+
+            # Did it work?
+            try
+                result = success.test stdout
+            catch err
+                return cb "Problem running regex `#{success}`"
+
+            # The new status.
+            current.up = result
+
+            cb null
+
+    , (cb) ->
         # Log it.
+        status = [ 'UP', 'DOWN' ][+!current.up]
         log.inf "#{name} is #{status} (#{handler})"
 
-        # Has the status changed?
-        jb.findOne 'status',
-            handler: current.handler
-            name: current.name
-        , (err, previous) ->
-            return cb err if err
+        # A virgin save?
+        return jb.save('status', me(current), cb) unless previous
 
-            # First save?
-            return jb.save('status', current, cb) unless previous
-
-            # A change of status?
-            return cb null if previous.up is current.up
+        # Nothing has changed?
+        return cb null if previous.up is current.up
             
-            # Save & mail then.
-            diff = moment(current.time).diff(moment(previous.time), 'minutes')
+        # Save & mail then.
+        diff = moment(current.time).diff(moment(previous.time), 'minutes')
 
-            # Save the new status and time.
-            async.parallel [ (cb) ->
-                jb.update 'status',
-                    $set:
-                        time: current.time
-                        up: current.up
-                ,
-                    handler: handler
-                    name: name
-                , cb
-
-            # Render all templates, save the event and mail it.
-            , (cb) ->
-                tmls = {}
-                for name, tml of config.email.templates
-                    dater = (int) -> moment(new Date(int)).format('ddd, HH:mm:ss')
-
-                    try
-                        tmls[name] = eco.render tml, _.extend _.clone(current),
-                            'diff': diff + 'm' # in minutes
-                            'time': dater current.time
-                            'since': dater previous.time
-                            'status': status
-                    catch err
-                        return cb err
-
-                # Save the event too.
-                jb.save 'events',
-                    handler: current.handler
-                    name: current.name
+        # Save the new status and time.
+        async.parallel [ (cb) ->
+            jb.update 'status',
+                $set:
                     time: current.time
-                    text: tmls[status.toLowerCase()]
-                    status: status
-                , cb
+                    up: current.up
+            , me()
+            , cb
 
-                # TODO Mail it!
+        # Render all templates, save the event and mail it.
+        , (cb) ->
+            tmls = {}
+            for name, tml of config.email.templates
+                try
+                    tmls[name] = eco.render tml, _.extend _.clone(current),
+                        'diff': diff + 'm' # in minutes
+                        'time': dater current.time
+                        'since': dater previous.time
+                        'status': status
+                catch err
+                    return cb err
 
-            ], cb
+            # Save the event too.
+            jb.save 'events', me(
+                time: current.time
+                text: tmls[status.toLowerCase()]
+                status: status
+            ), cb
+
+            # TODO Mail it!
+
+        ], cb
+
+    ], (err) ->
+        if err
+            # Log it.
+            log.err err if err
+
+            # No change from before.
+            return if previous and previous.up is no
+
+            # Save the event.
+            jb.save 'events', me(
+                time: current.time
+                text: 'Error: ' + err + ' since ' + dater(current.time)
+                status: 'DOWN'
+            )
+
+            # No history?
+            return jb.save 'status', me(current) unless previous
+
+            # Must be we have history and we were up.
+            jb.update 'status',
+                $set:
+                    time: current.time
+                    up: no
+            , me()
 
 # Make an array of jobs to run (errors will throw and die us).
 jobs = [] ; names = []
@@ -113,9 +136,8 @@ for handler, value of config.handlers
         delete obj.jobs
         jobs.push obj
 
-# All jobs in parallel, now...
-do all = _.bind async.each, null, jobs, one, (err) ->
-    log.err err if err # just log them, don't die
+# All jobs in parallel in the future & now...
+do all = _.bind _.forEach, null, jobs, one
 
 # ... and in the future
 interval = setInterval all, config.timeout * 6e4
