@@ -102,7 +102,7 @@ one = ({ handler, name, command, success }, done) ->
                         since: format time, 'HH:mm:ss on ddd'
                 ], (err, templates) ->
                     return cb err if err
-                    # console.log templates
+                    console.log templates
                     cb null
         
         # Message about a service coming back UP.
@@ -116,7 +116,7 @@ one = ({ handler, name, command, success }, done) ->
                         diff: moment(timeB).diff(moment(timeA), 'minutes')
                 ], (err, templates) ->
                     return cb err if err
-                    # console.log templates
+                    console.log templates
                     cb null
 
         # Start a downtime event of 1s, maybe.
@@ -137,7 +137,10 @@ one = ({ handler, name, command, success }, done) ->
                     return cb null if obj
 
                     # Save the first downtime of today boosting with a length.
-                    jb.save 'downtime', _.extend(save, length: length), cb
+                    jb.save 'downtime', _.extend(save,
+                        length: length
+                        time: time # so we can efficiently retrieve a range
+                    ), cb
 
                 ], cb
 
@@ -147,18 +150,21 @@ one = ({ handler, name, command, success }, done) ->
                 # Which day? Our "id".
                 day = format timeA, 'YYYY-MM-DD'
 
+                # Update this.
+                save = _.extend({}, me, { day: day })
+
                 # An inc update.
                 jb.update 'downtime',
                     $inc:
                         length: moment(timeB).diff(moment(timeA), 'seconds')
-                , me
+                , save
                 , (err, updated) ->
-                    console.log arguments
+                    cb null
         
         # ----------------------------------
 
         # If no previous or was UP.
-        if _.isNull(previous) or previous.up is yes
+        if _.isNull(previous) or previous.up
             # If we are now DOWN
             if current.up is no
                 async.parallel [
@@ -189,7 +195,7 @@ one = ({ handler, name, command, success }, done) ->
                 # Else previous must be today.
                 else
                     # Add downtime ms to today counter.
-                    do addDowntime(previous.time, current.time) cb
+                    addDowntime(previous.time, current.time) cb
 
             ], cb
 
@@ -230,8 +236,6 @@ respond = (files, res) -> # these are not the Droids blah blah...
     # When does today end? Cutoff on 7 days before that.
     cutoff = moment((new Date()).setHours(23,59,59,999)).subtract('days', 7)
 
-    days = []
-
     # Any errors awaiting for us?
     async.waterfall [ (cb) ->
         return cb null if !errors.length
@@ -239,7 +243,7 @@ respond = (files, res) -> # these are not the Droids blah blah...
     
     # Find all the events.
     , (cb) ->
-        jb.find 'events',
+        jb.find 'downtime',
             time:
                 $gt: +cutoff
         ,
@@ -255,12 +259,12 @@ respond = (files, res) -> # these are not the Droids blah blah...
             cb null, data
 
     # Classify each day in the past week.
-    , (events, cb) ->
+    , (downtimes, cb) ->
         # Init the 7 bands as unknowns (or maybe we don't have the data) for each current config.
-        bands = {}
+        history = {} ; days = []
         for job in jobs
-            bands[job.handler] ?= {}
-            bands[job.handler][job.name] = ( [] for i in [0...7] )
+            history[job.handler] ?= {}
+            history[job.handler][job.name] = ( 0 for i in [0...7] )
 
         # Sliding window biz.
         for band in [0...7]
@@ -269,21 +273,27 @@ respond = (files, res) -> # these are not the Droids blah blah...
 
             # Go through all events below the cutoff.
             length = 0
-            for event in events when event.time < cutoff
+            for downtime in downtimes when downtime.time < cutoff
                 length += 1 # we will remove this many
-                bands[event.handler][event.name][band].push event
+                history[downtime.handler][downtime.name][band] += downtime.length
 
             # Remove them from the original pile.
-            events = events.slice length
+            downtimes = downtimes.slice length
 
-            # Save for the renderer.
-            days.push cutoff.format('ddd D/M').split(' ')
+            # Save the day.
+            days.push format(cutoff, 'ddd:DD/M').split(':')
 
         # Return.
-        cb null, eco.render files['index.eco'],
-            bands: bands
-            css: files['normalize.css'] + '\n' + files['app.styl']
-            days: days
+        try
+            cb null, eco.render files['index.eco'],
+                days: days
+                history: history
+                css: files['normalize.css'] + '\n' + files['app.styl']
+                # Minute formatter.
+                toMinutes: _.memoize (seconds) ->
+                    Math.ceil seconds / 60
+        catch err
+            cb 'Cannot render index.eco'
 
     ], (err, html) ->
         # JSON bad

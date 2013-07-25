@@ -24,21 +24,15 @@
                 </tr>
             </thead>
             <tbody>
-                <% for handler, names of @bands: %>
+                <% for handler, names of @history: %>
                     <% for name, days of names: %>
                         <tr>
                             <th>
                                 <h2 title="<%= handler %>"><%= name %></h2>
                             </th>
-                            <% for i, day of days: %>
+                            <% for i, downtime of days: %>
                                 <td class="column<%= i %>">
-                                    <% if day.length isnt 0: %>
-                                        <div class="orange circle">
-                                            <span><%= day.pop().status %></span>
-                                        </div>
-                                    <% else: %>
-                                        <div class="green circle"><span>UP</span></div>
-                                    <% end %>
+                                    <div class="green circle"><span><%= @toMinutes downtime %></span></div>
                                 </td>
                             <% end %>
                         </tr>
