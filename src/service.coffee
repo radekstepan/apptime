@@ -22,8 +22,8 @@ config = require dir + '/config.coffee'
 # Open db.
 jb = EJDB.open dir + '/db/upp.ejdb'
 
-# Process one job, don't care when it ends.
-one = ({ handler, name, command, success }) ->
+# Process one job.
+one = ({ handler, name, command, success }, done) ->
     # Global.
     previous = null ; current = time: + new Date, up: no
 
@@ -103,29 +103,10 @@ one = ({ handler, name, command, success }) ->
         ], cb
 
     ], (err) ->
-        if err
-            # Log it.
-            log.err err if err
-
-            # No change from before.
-            return if previous and previous.up is no
-
-            # Save the event.
-            jb.save 'events', me(
-                time: current.time
-                text: 'Error: ' + err + ' since ' + dater(current.time)
-                status: 'DOWN'
-            )
-
-            # No history?
-            return jb.save 'status', me(current) unless previous
-
-            # Must be we have history and we were up.
-            jb.update 'status',
-                $set:
-                    time: current.time
-                    up: no
-            , me()
+        # Fatal err, just log it :).
+        log.err err if err
+        # All fine.
+        done null
 
 # Make an array of jobs to run.
 jobs = []
@@ -140,11 +121,17 @@ for handler, value of config.handlers
         delete obj.jobs
         jobs.push obj
 
-# All jobs in parallel in the future & now...
-do all = _.bind _.forEach, null, jobs, one
+# All jobs in parallel...
+q = async.queue (noop, done) ->
+    log.dbg 'Running'
+    async.each jobs, one, done
+, 1 # ... with concurrency of 1...
 
-# ... and in the future
-interval = setInterval all, config.timeout * 6e4
+# ...now.
+do run = _.bind q.push, null, {} # passing array to q.push != one job
+
+# ... and in the future.
+interval = setInterval run, config.timeout * 6e4
 
 # Handle an HTTP request.
 respond = (files, res) -> # these are not the Droids blah blah...
@@ -240,5 +227,5 @@ async.map filenames = [ 'index.eco', 'app.styl', 'normalize.css' ], (filename, c
 
     # Blast off.
     app.start process.env.PORT, (err) ->
-        log.inf 'upp'.bold + ' dashboard online'
+        log.dbg 'upp'.bold + ' dashboard online'
         throw err if err
