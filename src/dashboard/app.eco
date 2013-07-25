@@ -1,0 +1,36 @@
+<div id="header">
+    <h1>upp</h1>
+</div>
+<div id="wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th></th>
+                <% for [ day, date ] in @days: %>
+                    <th>
+                        <h3><%= day %></h3>
+                        <h4><%= date %></h4>
+                    </th>
+                <% end %>
+            </tr>
+        </thead>
+        <tbody>
+            <% for handler, names of @history: %>
+                <% for name, days of names: %>
+                    <tr>
+                        <th>
+                            <h2 title="<%= handler %>"><%= name %></h2>
+                        </th>
+                        <% for i, downtime of days: %>
+                            <td class="column<%= i %>">
+                                <div class="green circle">
+                                    <span><%= @toMinutes downtime %></span>
+                                </div>
+                            </td>
+                        <% end %>
+                    </tr>
+                <% end %>
+            <% end %>
+        </tbody>
+    </table>
+</div>

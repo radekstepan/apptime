@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>upp</title>
+    <script src='intermine.api.js'></script>
+    <script src='intermine.apps-a.js'></script>
+    <script>
+    (function() {
+        var client = new intermine.appsA(document.location.href);
+        client.load('dashboard', 'body');
+    })();
+    </script>
+</head>
+<body></body>
+</html>

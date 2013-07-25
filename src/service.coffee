@@ -11,6 +11,8 @@ path       = require 'path'
 stylus     = require 'stylus'
 log        = require 'node-logging'
 moment     = require 'moment'
+connect    = require 'connect' 
+middleware = require 'apps-a-middleware'
 fs         = _.extend require('fs'), require('fs-extra')
 
 # Root dir.
@@ -232,7 +234,7 @@ do run = _.bind q.push, null, {} # passing array to q.push != one job
 interval = setInterval run, config.timeout * 6e4
 
 # Handle an HTTP request.
-respond = (files, res) -> # these are not the Droids blah blah...
+respond = (res) ->
     # When does today end? Cutoff on 7 days before that.
     cutoff = moment((new Date()).setHours(23,59,59,999)).subtract('days', 7)
 
@@ -284,55 +286,38 @@ respond = (files, res) -> # these are not the Droids blah blah...
             days.push format(cutoff, 'ddd:DD/M').split(':')
 
         # Return.
-        try
-            cb null, eco.render files['index.eco'],
-                days: days
-                history: history
-                css: files['normalize.css'] + '\n' + files['app.styl']
-                # Minute formatter.
-                toMinutes: _.memoize (seconds) ->
-                    Math.ceil seconds / 60
-        catch err
-            cb 'Cannot render index.eco'
+        cb null,
+            days: days
+            history: history
 
-    ], (err, html) ->
-        # JSON bad
+    ], (err, json) ->
         if err
             res.writeHead 500, 'content-type': 'application/json'
             res.write JSON.stringify error: err
-            res.end()
-
-        # HTML good
         else
-            res.writeHead 200, 'content-type': 'text/html'
-            res.write html
-            res.end()
+            res.writeHead 200, 'content-type': 'application/json'
+            res.write JSON.stringify json
+
+        res.end()
 
 # Start flatiron dash app.
 app = flatiron.app
-app.use flatiron.plugins.http
+app.use flatiron.plugins.http,
+    before: [
+        # Static file serving.
+        connect.static dir + '/public'
+        # Apps/A.
+        middleware
+            apps: [
+                'file://../../../../src' # interesting...
+            ]
+    ]
 
-# Toor.
-app.router.path '/', ->
-    @get -> respond @res # this one is already partially applied!
+# API toor.
+app.router.path '/api', ->
+    @get -> respond @res
 
-# Load all the files.
-async.map filenames = [ 'index.eco', 'app.styl', 'normalize.css' ], (filename, cb) ->
-    fs.readFile dir + '/src/dashboard/' + filename, 'utf-8', (err, data) ->
-        return cb err if err
-        # Not Stylus is it?
-        if filename.match /\.styl$/
-            stylus(data).set('compress', true).render cb
-        else
-            cb null, data
-
-, (err, mapped) ->
+# Blast off.
+app.start process.env.PORT, (err) ->
     throw err if err
-
-    # Partially apply our processed files.
-    respond = _.partial respond, _.object filenames, mapped
-
-    # Blast off.
-    app.start process.env.PORT, (err) ->
-        log.dbg 'upp'.bold + ' dashboard online'
-        throw err if err
+    log.dbg 'upp'.bold + ' dashboard online'
