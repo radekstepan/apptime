@@ -18,7 +18,7 @@ module.exports =
 
         # The template of an alert email.
         templates:
-            subject: "Status alert: <%- @name %> is <%- @status %>"
+            subject: 'Status alert: <%- @name %> is <%- @status %>'
             up: '<%- @name %> is UP again on <%- @time %> after <%- @diff %> of downtime.'
             down: '<%- @name %> is down since <%- @since %>.'
     

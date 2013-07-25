@@ -19,6 +19,11 @@ dir = path.resolve __dirname, '../'
 # Read our config file.
 config = require dir + '/config.coffee'
 
+# Functionalize templates.
+_.assign config.email.templates, config.email.templates, (tml) ->
+    (context={}) ->
+        eco.render tml, context
+
 # Open db.
 jb = EJDB.open dir + '/db/upp.ejdb'
 
@@ -26,87 +31,150 @@ jb = EJDB.open dir + '/db/upp.ejdb'
 errors = []
 log.err = _.wrap log.err, (fn, message) ->
     fn message # log it
-    errors.push message # save it
+    errors.push message.toString() # save it
 
 # Process one job.
 one = ({ handler, name, command, success }, done) ->
     # Global.
     previous = null ; current = time: + new Date, up: no
 
+    # When does today start? Returns an int.
+    startOfToday = (new Date(current.time)).setHours(0,0,0,0)
+
     # Always save with our info.
-    me = (obj = {}) -> _.extend { handler: handler, name: name }, obj
+    me = { handler: handler, name: name }
 
-    # Nice date formatter.
-    dater = (int) -> moment(new Date(int)).format('ddd, HH:mm:ss')
-
-    # Get previous status.   
+    # Get then and now.
     async.waterfall [ (cb) ->
-        jb.findOne 'status', me(), (err, obj) ->
-            previous = obj ; cb err
 
-    # Run the command in the scripts dir.
+        # Get previous status (us reverse ordered by timestamp and only 1).
+        async.parallel [ (cb) ->
+            jb.findOne 'status', me
+            , $orderby:
+                time: -1
+            , (err, obj) ->
+                previous = obj ; cb err
+
+        # Get current status by execing a command.
+        , (cb) ->
+            # Exec command in current dir.
+            exec "cd #{dir}/scripts/ ; #{command}", (err, stdout, stderr) ->
+                # No is the default.
+                return cb null if err or stderr
+
+                # Did it work?
+                try
+                    result = success.test stdout
+                catch err
+                    return cb "Problem running regex `#{success}`"
+
+                # The new status.
+                current.up = result
+
+                cb null
+
+        ], (err) ->
+            cb err
+
+    # Save latest UP or DOWN status w/ timestamp.
     , (cb) ->
-        exec "cd #{dir}/scripts/ ; #{command}", (err, stdout, stderr) ->
-            # No is the default.
-            return cb null if err or stderr
+        jb.update 'latest', { $upsert: _.extend(me, current) }, me, (err, updated) -> cb err
 
-            # Did it work?
-            try
-                result = success.test stdout
-            catch err
-                return cb "Problem running regex `#{success}`"
-
-            # The new status.
-            current.up = result
-
-            cb null
-
+    # Determine what has happened.
     , (cb) ->
+
         # Log it.
         status = [ 'UP', 'DOWN' ][+!current.up]
         log.inf "#{name} is #{status} (#{handler})"
 
-        # A virgin save?
-        return jb.save('status', me(current), cb) unless previous
+        # ----------------------------------
 
-        # Nothing has changed?
-        return cb null if previous.up is current.up
-            
-        # Save & mail then.
-        diff = moment(current.time).diff(moment(previous.time), 'minutes')
+        # Nice date formatter.
+        dater = (int) ->
+            moment(new Date(int)).format('HH:mm:ss on ddd')
 
-        # Save the new status and time.
-        async.parallel [ (cb) ->
-            jb.update 'status',
-                $set:
-                    time: current.time
-                    up: current.up
-            , me()
-            , cb
-
-        # Render all templates, save the event and mail it.
-        , (cb) ->
-            tmls = {}
-            for k, tml of config.email.templates
+        # Message about a downtime starting at this time.
+        messageDowntime = (time) ->
+            (cb) ->
                 try
-                    tmls[k] = eco.render tml, _.extend _.clone(current),
-                        'diff': diff + 'm' # in minutes
-                        'time': dater current.time
-                        'since': dater previous.time
-                        'status': status
+                    console.log
+                        subject: config.email.templates.subject { name: name, status: 'DOWN' }
+                        html: config.email.templates.down { name: name, since: dater(time) }
                 catch err
                     return cb err
+        
+        # Message about a service coming back UP.
+        messageDiff = (timeA, timeB) ->
+            (cb) ->
+                cb null
 
-            # Save the event too.
-            jb.save 'events', me(
-                time: current.time
-                text: tmls[status.toLowerCase()]
-                status: status
-            ), cb
+        # Start a downtime event of 1 ms.
+        initDowntime = (time, length=1) ->
+            (cb) ->
+                cb null
 
-            # TODO Mail it!
+        # Add a time to a downtime event for timeA day.
+        addDowntime = (timeA, timeB) ->
+            (cb) ->
+                cb null
+        
+        # ----------------------------------
 
-        ], cb
+        # If no previous or was UP.
+        if _.isNull(previous) or previous.up is yes
+            # If we are now DOWN
+            if current.up is no
+                async.parallel [
+                    # Message about the time since current.
+                    messageDowntime(current.time)
+                    # Init 1 ms downtime for today (so we have a non zero total number).
+                    initDowntime current.time
+                ], cb
+
+        # If we were DOWN.
+        else
+            # Message about the total diff if we currently up?
+            async.waterfall [ (cb) ->
+                return cb null if current.up is no
+                do messageDiff(previous.time, current.time) cb
+
+            # We are currently down.
+            , (cb) ->
+                # If previous was yesterday?
+                if previous.time < startOfToday
+                    async.parallel [
+                        # Add downtime ms to yesterday counter.
+                        addDowntime(previous.time, startOfToday)
+                        # Add downtime ms to today counter.
+                        addDowntime(startOfToday, current.time)
+                    ], cb
+                
+                # Else previous must be today.
+                else
+                    # Add downtime ms to today counter.
+                    do addDowntime(previous.time, current.time) cb
+
+            ], cb
+
+
+        return
+
+        # ----------------------------------
+
+        # Db update.
+        jb.update 'status', { $upsert: _.extend(me, current) }, me, (err, updated) -> cb err
+
+        # Determine the downtime.
+        diff = moment(current.time).diff(moment(previous.time), 'minutes')
+
+        # Save the event too.
+        jb.save 'events', me(
+            time: current.time
+            text: tmls[status.toLowerCase()]
+            status: status
+        ), cb
+
+        # TODO Mail it!
 
     ], (err) ->
         # Fatal err, just log it :).
