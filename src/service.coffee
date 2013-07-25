@@ -22,6 +22,12 @@ config = require dir + '/config.coffee'
 # Open db.
 jb = EJDB.open dir + '/db/upp.ejdb'
 
+# If errors happen during a job, save them here so that dash can display them.
+errors = []
+log.err = _.wrap log.err, (fn, message) ->
+    fn message # log it
+    errors.push message # save it
+
 # Process one job.
 one = ({ handler, name, command, success }, done) ->
     # Global.
@@ -124,6 +130,7 @@ for handler, value of config.handlers
 # All jobs in parallel...
 q = async.queue (noop, done) ->
     log.dbg 'Running'
+    errors = [] # clear all previous errors
     async.each jobs, one, done
 , 1 # ... with concurrency of 1...
 
@@ -140,8 +147,13 @@ respond = (files, res) -> # these are not the Droids blah blah...
 
     days = []
 
-    # Find all the events.
+    # Any errors awaiting for us?
     async.waterfall [ (cb) ->
+        return cb null if !errors.length
+        cb errors
+    
+    # Find all the events.
+    , (cb) ->
         jb.find 'events',
             time:
                 $gt: +cutoff
