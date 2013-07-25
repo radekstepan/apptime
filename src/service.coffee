@@ -21,11 +21,18 @@ config = require dir + '/config.coffee'
 
 # Functionalize templates.
 _.assign config.email.templates, config.email.templates, (tml) ->
-    (context={}) ->
-        eco.render tml, context
+    (context={}, cb) ->
+        try
+            res = eco.render tml, context
+            cb null, res
+        catch err
+            cb err
 
 # Open db.
 jb = EJDB.open dir + '/db/upp.ejdb'
+
+# Date formatter
+format = (int, format) -> moment(new Date(int)).format(format)
 
 # If errors happen during a job, save them here so that dash can display them.
 errors = []
@@ -49,7 +56,7 @@ one = ({ handler, name, command, success }, done) ->
 
         # Get previous status (us reverse ordered by timestamp and only 1).
         async.parallel [ (cb) ->
-            jb.findOne 'status', me
+            jb.findOne 'latest', me
             , $orderby:
                 time: -1
             , (err, obj) ->
@@ -64,12 +71,9 @@ one = ({ handler, name, command, success }, done) ->
 
                 # Did it work?
                 try
-                    result = success.test stdout
+                    current.up = success.test stdout
                 catch err
                     return cb "Problem running regex `#{success}`"
-
-                # The new status.
-                current.up = result
 
                 cb null
 
@@ -78,45 +82,78 @@ one = ({ handler, name, command, success }, done) ->
 
     # Save latest UP or DOWN status w/ timestamp.
     , (cb) ->
-        jb.update 'latest', { $upsert: _.extend(me, current) }, me, (err, updated) -> cb err
+        jb.update 'latest', { $upsert: _.extend({}, me, current) }, me, (err, updated) -> cb err
 
     # Determine what has happened.
     , (cb) ->
-
         # Log it.
         status = [ 'UP', 'DOWN' ][+!current.up]
         log.inf "#{name} is #{status} (#{handler})"
 
         # ----------------------------------
 
-        # Nice date formatter.
-        dater = (int) ->
-            moment(new Date(int)).format('HH:mm:ss on ddd')
-
         # Message about a downtime starting at this time.
         messageDowntime = (time) ->
             (cb) ->
-                try
-                    console.log
-                        subject: config.email.templates.subject { name: name, status: 'DOWN' }
-                        html: config.email.templates.down { name: name, since: dater(time) }
-                catch err
-                    return cb err
+                async.parallel [
+                    _.partial config.email.templates.subject, { name: name, status: 'DOWN' }
+                    _.partial config.email.templates.down,
+                        name: name
+                        since: format time, 'HH:mm:ss on ddd'
+                ], (err, templates) ->
+                    return cb err if err
+                    # console.log templates
+                    cb null
         
         # Message about a service coming back UP.
         messageDiff = (timeA, timeB) ->
             (cb) ->
-                cb null
+                async.parallel [
+                    _.partial config.email.templates.subject, { name: name, status: 'UP' }
+                    _.partial config.email.templates.up,
+                        name: name
+                        time: format timeB, 'HH:mm:ss on ddd'
+                        diff: moment(timeB).diff(moment(timeA), 'minutes')
+                ], (err, templates) ->
+                    return cb err if err
+                    # console.log templates
+                    cb null
 
-        # Start a downtime event of 1 ms.
+        # Start a downtime event of 1s, maybe.
         initDowntime = (time, length=1) ->
             (cb) ->
-                cb null
+                # Which day? Our "id".
+                day = format time, 'YYYY-MM-DD'
+
+                # Check/save this.
+                save = _.extend({}, me, { day: day })
+
+                # Do we have something already?
+                async.waterfall [ (cb) ->
+                    jb.findOne 'downtime', save, cb
+
+                # If we have an object, we do not need to init.
+                , (obj, cb) ->
+                    return cb null if obj
+
+                    # Save the first downtime of today boosting with a length.
+                    jb.save 'downtime', _.extend(save, length: length), cb
+
+                ], cb
 
         # Add a time to a downtime event for timeA day.
         addDowntime = (timeA, timeB) ->
             (cb) ->
-                cb null
+                # Which day? Our "id".
+                day = format timeA, 'YYYY-MM-DD'
+
+                # An inc update.
+                jb.update 'downtime',
+                    $inc:
+                        length: moment(timeB).diff(moment(timeA), 'seconds')
+                , me
+                , (err, updated) ->
+                    console.log arguments
         
         # ----------------------------------
 
@@ -133,7 +170,7 @@ one = ({ handler, name, command, success }, done) ->
 
         # If we were DOWN.
         else
-            # Message about the total diff if we currently up?
+            # Message about the total diff if we are currently up?
             async.waterfall [ (cb) ->
                 return cb null if current.up is no
                 do messageDiff(previous.time, current.time) cb
@@ -155,26 +192,6 @@ one = ({ handler, name, command, success }, done) ->
                     do addDowntime(previous.time, current.time) cb
 
             ], cb
-
-
-        return
-
-        # ----------------------------------
-
-        # Db update.
-        jb.update 'status', { $upsert: _.extend(me, current) }, me, (err, updated) -> cb err
-
-        # Determine the downtime.
-        diff = moment(current.time).diff(moment(previous.time), 'minutes')
-
-        # Save the event too.
-        jb.save 'events', me(
-            time: current.time
-            text: tmls[status.toLowerCase()]
-            status: status
-        ), cb
-
-        # TODO Mail it!
 
     ], (err) ->
         # Fatal err, just log it :).

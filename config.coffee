@@ -42,9 +42,11 @@ module.exports =
                 'beta.flymine.org':
                     url: 'http://beta.flymine.org'
 
-        # An example of a script that randomly exits ok/not.
+        # An example of a running bash scripts.
         bash:
-            command: 'bash ./random.sh'
+            command: 'bash ./<%- @script %>.sh'
             jobs:
                 'unpredictable':
-                    arg: no
+                    script: 'random'
+                'offline':
+                    script: 'down'
