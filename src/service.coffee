@@ -38,10 +38,11 @@ one = ({ handler, name, command, success }) ->
         jb.findOne 'status', me(), (err, obj) ->
             previous = obj ; cb err
 
-    # Run the command.
+    # Run the command in the scripts dir.
     , (cb) ->
-        exec command, (err, stdout, stderr) ->
-            return cb "Problem runnning `#{command}`" if err or stderr
+        exec "cd #{dir}/scripts/ ; #{command}", (err, stdout, stderr) ->
+            # No is the default.
+            return cb null if err or stderr
 
             # Did it work?
             try
@@ -126,13 +127,16 @@ one = ({ handler, name, command, success }) ->
                     up: no
             , me()
 
-# Make an array of jobs to run (errors will throw and die us).
-jobs = [] ; names = []
+# Make an array of jobs to run.
+jobs = []
 for handler, value of config.handlers
     for name, opts of value.jobs
         obj = _.extend _.clone(value), name: name, handler: handler
-        obj.success = new RegExp obj.success
+        obj.success ?= /[\s\S]*/ # optional, always pass
+        # Make it into regex if it is not one already.
+        obj.success = new RegExp obj.success unless _.isRegExp obj.success
         obj.command = eco.render obj.command, opts
+        # Clean & push.
         delete obj.jobs
         jobs.push obj
 

@@ -41,3 +41,10 @@ module.exports =
             jobs:
                 'beta.flymine.org':
                     url: 'http://beta.flymine.org'
+
+        # An example of a script that randomly exits ok/not.
+        bash:
+            command: 'bash ./random.sh'
+            jobs:
+                'unpredictable':
+                    arg: no
