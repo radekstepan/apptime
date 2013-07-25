@@ -81,9 +81,9 @@ one = ({ handler, name, command, success }, done) ->
         # Render all templates, save the event and mail it.
         , (cb) ->
             tmls = {}
-            for name, tml of config.email.templates
+            for k, tml of config.email.templates
                 try
-                    tmls[name] = eco.render tml, _.extend _.clone(current),
+                    tmls[k] = eco.render tml, _.extend _.clone(current),
                         'diff': diff + 'm' # in minutes
                         'time': dater current.time
                         'since': dater previous.time
@@ -167,7 +167,7 @@ respond = (files, res) -> # these are not the Droids blah blah...
 
         # Sliding window biz.
         for band in [0...7]
-            # Increase the cutoff.
+            # Increase the cutoff to the end of the day.
             cutoff = cutoff.add('days', 1)
 
             # Go through all events below the cutoff.
