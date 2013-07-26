@@ -1,6 +1,6 @@
 <div class="wrapper">
     <header>
-        <h1>upp</h1>
+        <h1>apptime</h1>
     </header>
     <% if @errors: %>
         <div class="box">

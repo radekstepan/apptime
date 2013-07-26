@@ -1,4 +1,4 @@
-#upp
+#apptime
 
 Uptime monitoring linked to a mailer.
 

@@ -31,7 +31,20 @@ _.assign config.email.templates, config.email.templates, (tml) ->
             cb err
 
 # Open db.
-jb = EJDB.open dir + '/db/upp.ejdb'
+jb = EJDB.open dir + '/db/apptime.ejdb'
+
+# SMTP mailer.
+mailer = _.partial (transport, [ subject, body ], cb) ->
+    fields =
+        generateTextFromHTML: yes
+        subject: subject
+        html: body
+
+    log.dbg 'Sending email'
+
+    # Merge the fields from config onto our generated fields & send.
+    transport.sendMail _.extend(fields, config.email.fields), (err) -> cb err
+, nodemailer.createTransport 'SMTP', config.email.smtp
 
 # Date formatter
 format = (int, format) -> moment(new Date(int)).format(format)
@@ -102,10 +115,10 @@ one = ({ handler, name, command, success }, done) ->
                     _.partial config.email.templates.down,
                         name: name
                         since: format time, 'ddd, HH:mm:ss'
-                ], (err, templates) ->
+                ], (err, email) ->
                     return cb err if err
-                    console.log templates
-                    cb null
+                    # Mail it.
+                    mailer email, cb
         
         # Message about a service coming back UP.
         messageDiff = (timeA, timeB) ->
@@ -116,10 +129,10 @@ one = ({ handler, name, command, success }, done) ->
                         name: name
                         time: format timeB, 'ddd, HH:mm:ss'
                         diff: moment.duration(timeB - timeA).humanize()
-                ], (err, templates) ->
+                ], (err, email) ->
                     return cb err if err
-                    console.log templates
-                    cb null
+                    # Mail it.
+                    mailer email, cb
 
         # Start a downtime event of 1s, maybe.
         initDowntime = (time, length=1) ->
@@ -349,19 +362,19 @@ async.waterfall [ (cb) ->
 
     # Templatize
     async.parallel [
-        _.partial config.email.templates.subject, { name: 'upp process', verb: 'was', status: 'DOWN' }
+        _.partial config.email.templates.subject, { name: 'apptime process', verb: 'was', status: 'DOWN' }
         _.partial config.email.templates.integrity,
             # Since the latest status update.
             since: format _.max(arr, 'time').time, 'HH:mm:ss on ddd'
-    ], (err, templates) ->
+    ], (err) ->
         return cb err if err
-        console.log templates
-        cb null
+        # Mail it.
+        mailer email, cb
 
 # Start monitoring.
 ], (err) ->
     throw err if err
-    log.dbg 'upp'.bold + ' dashboard online'
+    log.dbg 'apptime'.bold + ' dashboard online'
 
     # All jobs in parallel...
     q = async.queue (noop, done) ->

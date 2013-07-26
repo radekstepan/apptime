@@ -6,7 +6,7 @@ module.exports =
     # Email config, see `nodemailer`.
     email:
         fields:
-            from: 'Upp Bot <piracy@microsoft.com>'
+            from: 'apptime bot <piracy@microsoft.com>'
             to: 'Mailing list <some@domain.uk>'
         smtp:
             host: 'smtp.gmail.com'
@@ -19,9 +19,9 @@ module.exports =
         # The template of an alert email.
         templates:
             subject: 'Status alert: <%- @name %> <%- @verb %> <%- @status %>'
-            up: '<%- @name %> is UP again on <%- @time %> after <%- @diff %> of downtime.'
-            down: '<%- @name %> is down since <%- @since %>.'
-            integrity: 'upp process was DOWN since at least <%- @since %>. The next batch of messages may not be true.'
+            up: '<code><%- @name %></code> is UP again on <%- @time %> after <strong><%- @diff %></strong> of downtime.'
+            down: '<code><%- @name %></code> is DOWN since <%- @since %>.'
+            integrity: '<pre>apptime</code> process was DOWN since at least <%- @since %>.\n<em>The next batch of messages (if any) may not be true.</em>'
     
     # Commands we can do.
     handlers:
