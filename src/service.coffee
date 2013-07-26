@@ -33,8 +33,11 @@ _.assign config.email.templates, config.email.templates, (tml) ->
 # Open db.
 jb = EJDB.open dir + '/db/apptime.ejdb'
 
-# SMTP mailer.
+# SMTP mailer or nothing.
 mailer = _.partial (transport, [ subject, body ], cb) ->
+    # Do we want it on?
+    return cb null unless config.email.active
+
     fields =
         generateTextFromHTML: yes
         subject: subject
@@ -366,7 +369,7 @@ async.waterfall [ (cb) ->
         _.partial config.email.templates.integrity,
             # Since the latest status update.
             since: format _.max(arr, 'time').time, 'HH:mm:ss on ddd'
-    ], (err) ->
+    ], (err, email) ->
         return cb err if err
         # Mail it.
         mailer email, cb

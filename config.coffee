@@ -5,6 +5,10 @@ module.exports =
     
     # Email config, see `nodemailer`.
     email:
+        # Do we want to send emails?
+        active: no
+
+        # See `nodemailer` for config.
         fields:
             from: 'apptime bot <piracy@microsoft.com>'
             to: 'Mailing list <some@domain.uk>'
