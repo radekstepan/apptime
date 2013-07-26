@@ -38,7 +38,7 @@ module.exports =
                 'web0':
                     server: 'web0'
                 'ukraine':
-                    server: 'ukraine'
+                    server: 'ukraine.sysbiol.cam.ac.uk'
 
         httping:
             command: 'httping <%- @url %> -c 1'
