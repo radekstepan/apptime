@@ -49,6 +49,13 @@ mailer = _.partial (transport, [ subject, body ], cb) ->
     transport.sendMail _.extend(fields, config.email.fields), (err) -> cb err
 , nodemailer.createTransport 'SMTP', config.email.smtp
 
+# Filter an array from db to a known one.
+known = (arr) ->
+    _.filter arr, (a) ->
+        # Find the entry in the existing ones.
+        _.find jobs, (b) ->
+            a.handler is b.handler and a.name is b.name
+
 # Date formatter
 format = (int, format) -> moment(new Date(int)).format(format)
 
@@ -268,12 +275,20 @@ respond = (res) ->
         ], cb
 
     # Classify each day in the past week.
-    , ([ downtimes, latest ], cb) ->
+    , (arrs, cb) ->
+        # Filter the collections to known jobs, sigh.
+        [ downtimes, latest ] = ( known arr for arr in arrs )
+
+        # Are all servers up?
+        allUp = yes
+
         # Make the latest info into a unique map (if there are dupes).
         map = {}
         for item in latest
             map[item.handler] ?= {}
             map[item.handler][item.name] ?= item
+            # Bad server?
+            allUp = no if allUp and not map[item.handler][item.name].up
 
         # Init the 7 bands as unknowns (or maybe we don't have the data) for each current config.
         data = {} ; days = []
@@ -292,7 +307,7 @@ respond = (res) ->
             length = 0
             for downtime in downtimes when downtime.time < cutoff
                 length += 1 # we will remove this many
-                data[downtime.handler][downtime.name].history[band] += downtime.length
+                data[downtime.handler]?[downtime.name].history[band] += downtime.length
 
             # Remove them from the original pile.
             downtimes = downtimes.slice length
@@ -304,6 +319,7 @@ respond = (res) ->
         cb null,
             days: days
             data: data
+            up: allUp
 
     ], (err, json) ->
         _.extend(json ?= {}, errors: if _.isArray(err) then err else [ err.toString() ]) if err
@@ -354,10 +370,7 @@ async.waterfall [ (cb) ->
     cursor.close()
 
     # Filter down to jobs we currently know.
-    arr = _.filter arr, (a) ->
-        # Find the entry in the existing ones.
-        _.find jobs, (b) ->
-            a.handler is b.handler and a.name is b.name
+    arr = known arr
 
     return cb null if !arr.length # we did not know any of them
 

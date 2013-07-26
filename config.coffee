@@ -55,3 +55,6 @@ module.exports =
                     script: 'random'
                 'offline':
                     script: 'down'
+
+# InterMine specific config @ukraine.
+return module.exports = require './config.intermine.coffee' if process.env.INTERMINE is '1'
