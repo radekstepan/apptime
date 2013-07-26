@@ -101,7 +101,7 @@ one = ({ handler, name, command, success }, done) ->
                     _.partial config.email.templates.subject, { name: name, verb: 'is', status: 'DOWN' }
                     _.partial config.email.templates.down,
                         name: name
-                        since: format time, 'HH:mm:ss on ddd'
+                        since: format time, 'ddd, HH:mm:ss'
                 ], (err, templates) ->
                     return cb err if err
                     console.log templates
@@ -114,8 +114,8 @@ one = ({ handler, name, command, success }, done) ->
                     _.partial config.email.templates.subject, { name: name, verb: 'is', status: 'UP' }
                     _.partial config.email.templates.up,
                         name: name
-                        time: format timeB, 'HH:mm:ss on ddd'
-                        diff: moment(timeB).diff(moment(timeA), 'minutes') + 'm'
+                        time: format timeB, 'ddd, HH:mm:ss'
+                        diff: moment.duration(timeB - timeA).humanize()
                 ], (err, templates) ->
                     return cb err if err
                     console.log templates
@@ -137,7 +137,6 @@ one = ({ handler, name, command, success }, done) ->
                 # If we have an object, we do not need to init.
                 , (obj, cb) ->
                     return cb null if obj
-
                     # Save the first downtime of today boosting with a length.
                     jb.save 'downtime', _.extend(save,
                         length: length
@@ -149,18 +148,12 @@ one = ({ handler, name, command, success }, done) ->
         # Add a time to a downtime event for timeA day.
         addDowntime = (timeA, timeB) ->
             (cb) ->
-                # Which day? Our "id".
-                day = format timeA, 'YYYY-MM-DD'
-
-                # Update this.
-                save = _.extend({}, me, { day: day })
-
                 # An inc update.
-                jb.update 'downtime',
+                jb.update 'downtime', _.extend({}, me,
+                    day: format timeA, 'YYYY-MM-DD'
                     $inc:
                         length: moment(timeB).diff(moment(timeA), 'seconds')
-                , save
-                , (err, updated) ->
+                ), (err, updated) ->
                     cb null
         
         # ----------- THE LOGIC -----------
@@ -241,11 +234,9 @@ respond = (res) ->
 
             # Any results at all?
             return ( cursor.close() ; cb(null, []) ) if !count
-            
-            # Arrayize?
-            data = [ data ] unless _.isArray(data = cursor.object())
+            # Get the array.
+            cb null, ( cursor.object() while cursor.next() )
             cursor.close()
-            cb null, data
 
     # Classify each day in the past week.
     , (downtimes, cb) ->
@@ -323,16 +314,17 @@ async.waterfall [ (cb) ->
 , (cursor, count, cb) ->
     return cb null if !count # db is empty
 
-    # Arrayize.
-    arr = [ arr ] unless _.isArray arr = cursor.object()
+    # Get the array.
+    arr = ( cursor.object() while cursor.next() )
     cursor.close()
 
     # Filter down to jobs we currently know.
     arr = _.filter arr, (a) ->
+        # Find the entry in the existing ones.
         _.find jobs, (b) ->
             a.handler is b.handler and a.name is b.name
 
-    return cb null if !arr.length # we did not know them
+    return cb null if !arr.length # we did not know any of them
 
     log.dbg "#{count} jobs are behind schedule"
 
