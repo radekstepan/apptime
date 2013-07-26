@@ -7,4 +7,9 @@ class exports.App
             $(target).html @templates['app.eco'] _.extend data,
                 # Minute formatter.
                 toMinutes: _.memoize (seconds) ->
-                    Math.ceil seconds / 60
+                    Math.ceil(seconds / 60) + 'm'
+
+            $('.circle').tipsy
+                gravity: 's'
+                html: no
+                offset: 1

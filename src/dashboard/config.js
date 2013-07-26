@@ -11,6 +11,9 @@ module.exports = {
             },            
             "normalize": {
                 "path": "normalize.css"
+            },
+            "tipsy": {
+                "path": "tipsy.css"
             }
         },
         "js": {
@@ -19,7 +22,11 @@ module.exports = {
             },
             "_": {
                 "path": "underscore.js"
-            },            
+            },
+            "jQuery.tipsy": {
+                "path": "jquery.tipsy.js",
+                "depends": [ "jQuery" ]
+            }
         }
     }
 };

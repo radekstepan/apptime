@@ -25,9 +25,16 @@
                                 </th>
                                 <% for i, downtime of days: %>
                                     <td class="column<%= i %>">
-                                        <div class="green circle">
-                                            <span><%= @toMinutes downtime %></span>
-                                        </div>
+                                        <% if downtime is 0: %>
+                                            <div class="green circle" original-title="No downtime"></div>
+                                        <% else: %>
+                                            <!-- more than 30m? -->
+                                            <% if downtime < 1800: %>
+                                                <div class="orange circle" original-title="<%= @toMinutes downtime %>"></div>
+                                            <% else: %>
+                                                <div class="red circle" original-title="<%= @toMinutes downtime %>"></div>
+                                            <% end %>
+                                        <% end %>
                                     </td>
                                 <% end %>
                             </tr>
