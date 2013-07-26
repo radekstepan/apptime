@@ -1,18 +1,29 @@
 body
     font-family: 'Source Sans Pro', sans-serif
+
+.wrapper
+    padding-bottom: 30px
+
+.box
+    background: #FFF
     margin: 0 auto
     width: 800px
+    border-radius: 4px
+    box-shadow: 0px 1px 4px rgba(0,0,0,0.29)    
 
-#header
-    background: #689CF0
+header
+    width: 800px
+    margin: 0 auto
 
     h1
-        color: #FFF
+        color: #333
         margin: 0
-        padding: 5px 15px 10px 15px
+        padding: 10px 15px 15px 15px
         display: inline-block
-        background: #487AC9
-        font-size: 20px
+        font-size: 30px
+
+article
+    padding: 20px
 
 table
     width: 100%
@@ -35,9 +46,8 @@ table
             text-align: left
 
             h2
-                color: #ADA9A9
-                font-size: 18px
-                font-weight: normal
+                color: #333
+                font-size: 16px
 
         td
             padding: 20px 0
@@ -52,22 +62,29 @@ table
                 content: ""
                 display: block
                 top: 50%
-                z-index: -1
 
             .circle
                 border-radius: 50%
                 width: 12px
                 height: 12px
                 margin: 0 auto
+                z-index: 1
+                position: absolute
+                top: 50%
+                left: 50%
+                margin: -5px
 
                 span
                     display: none
 
                 &.green
-                    background: #52C082
+                    background: #339966
 
                 &.orange
-                    background: #FEC600
+                    background: #f29d50
+
+                &.red
+                    background: #cc3300
 
             &.column0
                 &:after
@@ -78,19 +95,3 @@ table
                 &:after
                     width: 50%
                     left: 0
-
-                .circle
-                    width: 40px
-                    height: 40px
-
-                    span
-                        display: block
-                        font-size: 11px
-                        text-align: center
-                        line-height: 40px
-
-                    &.green span
-                        color: #FFF
-
-                    &.orange span
-                        color: #000
