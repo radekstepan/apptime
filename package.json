@@ -1,5 +1,5 @@
 {
-    "name": "upp",
+    "name": "apptime",
     "version": "0.1.0",
     "description": "Uptime monitoring linked to a mailer",
     "main": "index.js",
