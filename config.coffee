@@ -18,9 +18,10 @@ module.exports =
 
         # The template of an alert email.
         templates:
-            subject: 'Status alert: <%- @name %> is <%- @status %>'
+            subject: 'Status alert: <%- @name %> <%- @verb %> <%- @status %>'
             up: '<%- @name %> is UP again on <%- @time %> after <%- @diff %> of downtime.'
             down: '<%- @name %> is down since <%- @since %>.'
+            integrity: 'upp process was DOWN since at least <%- @since %>. The next batch of messages may not be true.'
     
     # Commands we can do.
     handlers:

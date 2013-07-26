@@ -57,6 +57,7 @@ one = ({ handler, name, command, success }, done) ->
     async.waterfall [ (cb) ->
 
         # Get previous status (there is always only one record).
+        # Make sure we get latest only after a specific cutoff time (integrity).
         async.parallel [ (cb) ->
             jb.findOne 'latest', me, (err, obj) ->
                 previous = obj ; cb err
@@ -96,7 +97,7 @@ one = ({ handler, name, command, success }, done) ->
         messageDowntime = (time) ->
             (cb) ->
                 async.parallel [
-                    _.partial config.email.templates.subject, { name: name, status: 'DOWN' }
+                    _.partial config.email.templates.subject, { name: name, verb: 'is', status: 'DOWN' }
                     _.partial config.email.templates.down,
                         name: name
                         since: format time, 'HH:mm:ss on ddd'
@@ -109,7 +110,7 @@ one = ({ handler, name, command, success }, done) ->
         messageDiff = (timeA, timeB) ->
             (cb) ->
                 async.parallel [
-                    _.partial config.email.templates.subject, { name: name, status: 'UP' }
+                    _.partial config.email.templates.subject, { name: name, verb: 'is', status: 'UP' }
                     _.partial config.email.templates.up,
                         name: name
                         time: format timeB, 'HH:mm:ss on ddd'
@@ -218,19 +219,6 @@ for handler, value of config.handlers
         delete obj.jobs
         jobs.push obj
 
-# All jobs in parallel...
-q = async.queue (noop, done) ->
-    log.dbg 'Running'
-    errors = [] # clear all previous errors
-    async.each jobs, one, done
-, 1 # ... with concurrency of 1...
-
-# ...now.
-do run = _.bind q.push, null, {} # passing array to q.push != one job
-
-# ... and in the future.
-interval = setInterval run, config.timeout * 6e4
-
 # Handle an HTTP request.
 respond = (res) ->
     # When does today end? Cutoff on 7 days before that.
@@ -252,9 +240,8 @@ respond = (res) ->
         , (err, cursor, count) ->
             return cb err if err
 
-            data = []
-            while cursor.next()
-                data.push cursor.object()
+            data = cursor.object()
+            cursor.close()
 
             cb null, data
 
@@ -315,7 +302,58 @@ app.use flatiron.plugins.http,
 app.router.path '/api', ->
     @get -> respond @res
 
-# Blast off.
-app.start process.env.PORT, (err) ->
+# Dash blast off.
+async.waterfall [ (cb) ->
+    app.start process.env.PORT, cb
+
+# Integrity check.
+, (cb) ->
+    # 3m behind last timeout.
+    cutoff = + new Date - ( (config.timeout + 3) * 6e4 )
+
+    # For all current jobs, get their latest later than cutoff.
+    jb.find 'latest',
+        $dropall: yes # remove them at the same time
+    , _.map(jobs, (job) ->
+        handler: job.handler
+        name: job.name
+        time: $lt: cutoff
+    ), cb
+
+# Message if we were down.
+, (cursor, count, cb) ->    
+    return cb null if !count
+
+    log.dbg "#{count} jobs are behind schedule"
+
+    # Find the job with the latest status update.
+    last = _.max(last, 'time') if _.isArray last = cursor.object()
+    cursor.close()
+
+    # Templatize
+    async.parallel [
+        _.partial config.email.templates.subject, { name: 'upp process', verb: 'was', status: 'DOWN' }
+        _.partial config.email.templates.integrity,
+            since: format last.time, 'HH:mm:ss on ddd'
+    ], (err, templates) ->
+        return cb err if err
+        console.log templates
+        cb null
+
+# Start monitoring.
+], (err) ->
     throw err if err
     log.dbg 'upp'.bold + ' dashboard online'
+
+    # All jobs in parallel...
+    q = async.queue (noop, done) ->
+        log.dbg 'Running a batch'
+        errors = [] # clear all previous errors
+        async.each jobs, one, done
+    , 1 # ... with concurrency of 1...
+
+    # ...now.
+    do run = _.bind q.push, null, {} # passing array to q.push != one job
+
+    # ... and in the future.
+    interval = setInterval run, config.timeout * 6e4
