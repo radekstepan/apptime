@@ -56,10 +56,9 @@ one = ({ handler, name, command, success }, done) ->
     # Get then and now.
     async.waterfall [ (cb) ->
 
-        # Get previous status (there is always only one record).
-        # Make sure we get latest only after a specific cutoff time (integrity).
+        # Get previous status (and do descending sort on time just to make sure).
         async.parallel [ (cb) ->
-            jb.findOne 'latest', me, (err, obj) ->
+            jb.findOne 'latest', me, { $orderby: time: -1 }, (err, obj) ->
                 previous = obj ; cb err
 
         # Get current status by execing a command.
@@ -82,7 +81,9 @@ one = ({ handler, name, command, success }, done) ->
 
     # Save latest UP or DOWN status w/ timestamp.
     , (cb) ->
-        jb.update 'latest', { me, $upsert: _.extend({}, me, current) }, (err, updated) ->
+        jb.update 'latest',
+            _.extend({}, me, $set: current, $upsert: _.extend({}, me, current))
+        , (err, updated) ->
             cb err
 
     # Determine what has happened.
@@ -114,7 +115,7 @@ one = ({ handler, name, command, success }, done) ->
                     _.partial config.email.templates.up,
                         name: name
                         time: format timeB, 'HH:mm:ss on ddd'
-                        diff: moment(timeB).diff(moment(timeA), 'minutes')
+                        diff: moment(timeB).diff(moment(timeA), 'minutes') + 'm'
                 ], (err, templates) ->
                     return cb err if err
                     console.log templates
@@ -162,43 +163,41 @@ one = ({ handler, name, command, success }, done) ->
                 , (err, updated) ->
                     cb null
         
-        # ----------------------------------
+        # ----------- THE LOGIC -----------
 
         # If no previous or was UP.
         if _.isNull(previous) or previous.up
-            # If we are now DOWN
-            if current.up is no
-                async.parallel [
-                    # Message about the time since current.
-                    messageDowntime(current.time)
-                    # Init 1 ms downtime for today (so we have a non zero total number).
-                    initDowntime current.time
-                ], cb
-
-        # If we were DOWN.
-        else
-            # Message about the total diff if we are currently up?
-            async.waterfall [ (cb) ->
-                return cb null if current.up is no
-                do messageDiff(previous.time, current.time) cb
-
-            # We are currently down.
-            , (cb) ->
-                # If previous was yesterday?
-                if previous.time < startOfToday
-                    async.parallel [
-                        # Add downtime ms to yesterday counter.
-                        addDowntime(previous.time, startOfToday)
-                        # Add downtime ms to today counter.
-                        addDowntime(startOfToday, current.time)
-                    ], cb
-                
-                # Else previous must be today.
-                else
-                    # Add downtime ms to today counter.
-                    addDowntime(previous.time, current.time) cb
-
+            # Exit if we are now UP.
+            return cb null if current.up
+            
+            # If we are now DOWN.
+            return async.parallel [
+                # Message about the time since current.
+                messageDowntime(current.time)
+                # Init 1 ms downtime for today (so we have a non zero total number).
+                initDowntime current.time
             ], cb
+
+        # We were DOWN.
+        # Message about the total diff if we are currently UP.
+        async.waterfall [ (cb) ->
+            return cb null if current.up is no
+            messageDiff(previous.time, current.time) cb
+
+        # Add downtime whether we are UP or DOWN now.
+        , (cb) ->
+            # Is previous today?
+            return addDowntime(previous.time, current.time) cb if previous.time > startOfToday
+
+            # Previous must have been yesterday then.
+            async.parallel [
+                # Add downtime ms to yesterday counter.
+                addDowntime(previous.time, startOfToday)
+                # Add downtime ms to today counter.
+                addDowntime(startOfToday, current.time)
+            ], cb
+
+        ], cb
 
     ], (err) ->
         # Fatal err, just log it :).
@@ -240,9 +239,12 @@ respond = (res) ->
         , (err, cursor, count) ->
             return cb err if err
 
-            data = cursor.object()
+            # Any results at all?
+            return ( cursor.close() ; cb(null, []) ) if !count
+            
+            # Arrayize?
+            data = [ data ] unless _.isArray(data = cursor.object())
             cursor.close()
-
             cb null, data
 
     # Classify each day in the past week.
@@ -308,33 +310,38 @@ async.waterfall [ (cb) ->
 
 # Integrity check.
 , (cb) ->
-    # 3m behind last timeout.
-    cutoff = + new Date - ( (config.timeout + 3) * 6e4 )
-
     # For all current jobs, get their latest later than cutoff.
     jb.find 'latest',
-        $dropall: yes # remove them at the same time
-    , _.map(jobs, (job) ->
-        handler: job.handler
-        name: job.name
-        time: $lt: cutoff
-    ), cb
+        # 3m behind last timeout.
+        time:
+            $lt: + new Date - ( (config.timeout + 3) * 6e4 )
+        # Remove them at the same time.
+        $dropall: yes
+    , cb
 
 # Message if we were down.
-, (cursor, count, cb) ->    
-    return cb null if !count
+, (cursor, count, cb) ->
+    return cb null if !count # db is empty
+
+    # Arrayize.
+    arr = [ arr ] unless _.isArray arr = cursor.object()
+    cursor.close()
+
+    # Filter down to jobs we currently know.
+    arr = _.filter arr, (a) ->
+        _.find jobs, (b) ->
+            a.handler is b.handler and a.name is b.name
+
+    return cb null if !arr.length # we did not know them
 
     log.dbg "#{count} jobs are behind schedule"
-
-    # Find the job with the latest status update.
-    last = _.max(last, 'time') if _.isArray last = cursor.object()
-    cursor.close()
 
     # Templatize
     async.parallel [
         _.partial config.email.templates.subject, { name: 'upp process', verb: 'was', status: 'DOWN' }
         _.partial config.email.templates.integrity,
-            since: format last.time, 'HH:mm:ss on ddd'
+            # Since the latest status update.
+            since: format _.max(arr, 'time').time, 'HH:mm:ss on ddd'
     ], (err, templates) ->
         return cb err if err
         console.log templates
@@ -347,9 +354,11 @@ async.waterfall [ (cb) ->
 
     # All jobs in parallel...
     q = async.queue (noop, done) ->
-        log.dbg 'Running a batch'
+        log.dbg 'Running a batch'        
         errors = [] # clear all previous errors
-        async.each jobs, one, done
+        async.each jobs, one, ->
+            log.dbg 'Batch done'
+            done null
     , 1 # ... with concurrency of 1...
 
     # ...now.

@@ -26,15 +26,15 @@ module.exports =
     # Commands we can do.
     handlers:
 
-        ping:
-            command: 'ping <%- @server %> -c 1', # one request to be sent using `ping`
-            success: '1 packets transmitted, 1 received, 0% packet loss, time 0ms' # regex
-            # The individual jobs we want to run.
-            jobs:
-                'web0':
-                    server: 'web0'
-                'ukraine':
-                    server: 'ukraine'
+        # ping:
+        #     command: 'ping <%- @server %> -c 1', # one request to be sent using `ping`
+        #     success: '1 packets transmitted, 1 received, 0% packet loss, time 0ms' # regex
+        #     # The individual jobs we want to run.
+        #     jobs:
+        #         'web0':
+        #             server: 'web0'
+        #         'ukraine':
+        #             server: 'ukraine'
 
         httping:
             command: 'httping <%- @url %> -c 1'
