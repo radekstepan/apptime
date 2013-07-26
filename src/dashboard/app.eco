@@ -30,9 +30,9 @@
                                         <% else: %>
                                             <!-- more than 30m? -->
                                             <% if downtime < 1800: %>
-                                                <div class="orange circle" original-title="<%= @toMinutes downtime %>"></div>
+                                                <div class="orange circle" original-title="Down for <%= @toMinutes downtime %>"></div>
                                             <% else: %>
-                                                <div class="red circle" original-title="<%= @toMinutes downtime %>"></div>
+                                                <div class="red circle" original-title="Down for <%= @toMinutes downtime %>"></div>
                                             <% end %>
                                         <% end %>
                                     </td>
