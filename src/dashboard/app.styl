@@ -25,6 +25,21 @@ header
 article
     padding: 20px
 
+    &.errors
+        h2
+            color: #FF5050
+
+        ul
+            list-style-type: none
+            margin: 0
+            padding: 0
+
+            li
+                &:after
+                    content: "."
+                    display: inline-block
+                    line-height: 30px
+
 table
     width: 100%
 
@@ -36,18 +51,43 @@ table
             color: #689CF0
             font-size: 16px
             text-transform: uppercase
+            margin: 0
 
         h4
             color: #ADA9A9
             font-size: 12px
+            margin: 10px 0
 
     tbody
+        .circle
+            border-radius: 50%
+            width: 36px
+            height: 36px
+            background-image: url('status-lights.png')
+            cursor: pointer
+
+            &.red
+                background-position: 0 0
+
+            &.orange
+                background-position: 77px 0
+
+            &.green
+                background-position: 37px 0
+
         th
             text-align: left
+
+            .circle
+                margin-right: 10px
+                display: inline-block
 
             h2
                 color: #333
                 font-size: 16px
+                display: inline-block
+                margin: 8px 0
+                vertical-align: top
 
         td
             padding: 20px 0
@@ -63,28 +103,6 @@ table
                 display: block
                 top: 50%
 
-            .circle
-                border-radius: 50%
-                width: 36px
-                height: 36px
-                margin: 0 auto
-                z-index: 1
-                position: absolute
-                top: 50%
-                left: 50%
-                margin: -18px
-                cursor: pointer
-                background-image: url('status-lights.png')
-
-                &.red
-                    background-position: 0 0
-
-                &.orange
-                    background-position: 77px 0
-
-                &.green
-                    background-position: 37px 0
-
             &.column0
                 &:after
                     width: 50%
@@ -94,3 +112,11 @@ table
                 &:after
                     width: 50%
                     left: 0
+
+            .circle
+                margin: 0 auto
+                z-index: 1
+                position: absolute
+                top: 50%
+                left: 50%
+                margin: -18px

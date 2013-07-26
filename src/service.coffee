@@ -221,15 +221,9 @@ respond = (res) ->
         return cb null if !errors.length
         cb errors
     
-    # Find all the events.
     , (cb) ->
-        jb.find 'downtime',
-            time:
-                $gt: +cutoff
-        ,
-            $orderby:
-                time: 1
-        , (err, cursor, count) ->
+        # Arrayize results from DB.
+        arrayize = (cb, err, cursor, count) ->
             return cb err if err
 
             # Any results at all?
@@ -238,13 +232,40 @@ respond = (res) ->
             cb null, ( cursor.object() while cursor.next() )
             cursor.close()
 
+        # Find all the events.
+        async.parallel [ (cb) ->
+            jb.find 'downtime',
+                time:
+                    $gt: +cutoff
+            ,
+                $orderby:
+                    time: 1 # upward
+            , _.partial arrayize, cb
+
+        # And also the latest statei.
+        , (cb) ->
+            jb.find 'latest', {},
+                $orderby:
+                    time: -1 # downward
+            , _.partial arrayize, cb
+
+        ], cb
+
     # Classify each day in the past week.
-    , (downtimes, cb) ->
+    , ([ downtimes, latest ], cb) ->
+        # Make the latest info into a unique map (if there are dupes).
+        map = {}
+        for item in latest
+            map[item.handler] ?= {}
+            map[item.handler][item.name] ?= item
+
         # Init the 7 bands as unknowns (or maybe we don't have the data) for each current config.
-        history = {} ; days = []
+        data = {} ; days = []
         for job in jobs
-            history[job.handler] ?= {}
-            history[job.handler][job.name] = ( 0 for i in [0...7] )
+            data[job.handler] ?= {}
+            data[job.handler][job.name] =
+                latest: map[job.handler]?[job.name]
+                history: ( 0 for i in [0...7] )
 
         # Sliding window biz.
         for band in [0...7]
@@ -255,7 +276,7 @@ respond = (res) ->
             length = 0
             for downtime in downtimes when downtime.time < cutoff
                 length += 1 # we will remove this many
-                history[downtime.handler][downtime.name][band] += downtime.length
+                data[downtime.handler][downtime.name].history[band] += downtime.length
 
             # Remove them from the original pile.
             downtimes = downtimes.slice length
@@ -266,15 +287,13 @@ respond = (res) ->
         # Return.
         cb null,
             days: days
-            history: history
+            data: data
 
     ], (err, json) ->
-        if err
-            res.writeHead 500, 'content-type': 'application/json'
-            res.write JSON.stringify error: err
-        else
-            res.writeHead 200, 'content-type': 'application/json'
-            res.write JSON.stringify json
+        _.extend(json ?= {}, errors: if _.isArray(err) then err else [ err.toString() ]) if err
+
+        res.writeHead 200, 'content-type': 'application/json'
+        res.write JSON.stringify json
 
         res.end()
 

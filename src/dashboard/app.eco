@@ -2,46 +2,64 @@
     <header>
         <h1>upp</h1>
     </header>
-    <div class="box">
-        <article>
-            <table>
-                <thead>
-                    <tr>
-                        <th></th>
-                        <% for [ day, date ] in @days: %>
-                            <th>
-                                <h3><%= day %></h3>
-                                <h4><%= date %></h4>
-                            </th>
-                        <% end %>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% for handler, names of @history: %>
-                        <% for name, days of names: %>
-                            <tr>
+    <% if @errors: %>
+        <div class="box">
+            <article class="errors">
+                <h2>Sadness &hellip;</h2>
+                <ul>
+                <% for error in @errors: %>
+                    <li><%- error %></li>
+                <% end %>
+                </ul>
+            </article>
+        </div>
+    <% else: %>
+        <div class="box">
+            <article>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <% for [ day, date ] in @days: %>
                                 <th>
-                                    <h2 title="<%= handler %>"><%= name %></h2>
+                                    <h3><%= day %></h3>
+                                    <h4><%= date %></h4>
                                 </th>
-                                <% for i, downtime of days: %>
-                                    <td class="column<%= i %>">
-                                        <% if downtime is 0: %>
-                                            <div class="green circle" original-title="No downtime"></div>
+                            <% end %>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% for handler, names of @data: %>
+                            <% for name, { latest, history } of names: %>
+                                <tr>
+                                    <th>
+                                        <% if latest.up: %>
+                                            <div class="tipped green circle" original-title="Up"></div>
                                         <% else: %>
-                                            <!-- more than 30m? -->
-                                            <% if downtime < 1800: %>
-                                                <div class="orange circle" original-title="Down for <%= @toMinutes downtime %>"></div>
-                                            <% else: %>
-                                                <div class="red circle" original-title="Down for <%= @toMinutes downtime %>"></div>
-                                            <% end %>
+                                            <div class="tipped red circle" original-title="Down"></div>
                                         <% end %>
-                                    </td>
-                                <% end %>
-                            </tr>
+                                        <h2 class="tipped" original-title="<%= handler %>"><%= name %></h2>
+                                    </th>
+                                    <% for column, downtime of history: %>
+                                        <td class="column<%= column %>">
+                                            <% if downtime is 0: %>
+                                                <div class="tipped green circle" original-title="No downtime"></div>
+                                            <% else: %>
+                                                <!-- more than 30m? -->
+                                                <% if downtime < 1800: %>
+                                                    <div class="tipped orange circle" original-title="Down for <%= @toMinutes downtime %>"></div>
+                                                <% else: %>
+                                                    <div class="tipped red circle" original-title="Down for <%= @toMinutes downtime %>"></div>
+                                                <% end %>
+                                            <% end %>
+                                        </td>
+                                    <% end %>
+                                </tr>
+                            <% end %>
                         <% end %>
-                    <% end %>
-                </tbody>
-            </table>
-        </article>
-    </div>
+                    </tbody>
+                </table>
+            </article>
+        </div>
+    <% end %>
 </div>

@@ -9,7 +9,7 @@ class exports.App
                 toMinutes: _.memoize (seconds) ->
                     Math.ceil(seconds / 60) + 'm'
 
-            $('.circle').tipsy
+            $('.tipped').tipsy
                 gravity: 's'
                 html: no
                 offset: 1
