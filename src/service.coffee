@@ -56,12 +56,9 @@ one = ({ handler, name, command, success }, done) ->
     # Get then and now.
     async.waterfall [ (cb) ->
 
-        # Get previous status (us reverse ordered by timestamp and only 1).
+        # Get previous status (there is always only one record).
         async.parallel [ (cb) ->
-            jb.findOne 'latest', me
-            , $orderby:
-                time: -1
-            , (err, obj) ->
+            jb.findOne 'latest', me, (err, obj) ->
                 previous = obj ; cb err
 
         # Get current status by execing a command.
@@ -84,7 +81,8 @@ one = ({ handler, name, command, success }, done) ->
 
     # Save latest UP or DOWN status w/ timestamp.
     , (cb) ->
-        jb.update 'latest', { $upsert: _.extend({}, me, current) }, me, (err, updated) -> cb err
+        jb.update 'latest', { me, $upsert: _.extend({}, me, current) }, (err, updated) ->
+            cb err
 
     # Determine what has happened.
     , (cb) ->
