@@ -41,7 +41,7 @@ module.exports =
                     server: 'ukraine.sysbiol.cam.ac.uk'
 
         httping:
-            command: 'httping <%- @url %> -c 1'
+            command: 'httping <%- @url %> -c 1 -s'
             success: '1 connects, 1 ok, 0.00% failed'
             jobs:
                 'beta.flymine.org':
@@ -55,6 +55,13 @@ module.exports =
                     script: 'random'
                 'offline':
                     script: 'down'
+
+        git:
+            command: 'git ls-remote <%- @repo %>'
+            success: 'refs/heads/master'
+            jobs:
+                'intermine (github)':
+                    repo: 'git://github.com/intermine/intermine.git'
 
 # InterMine specific config @ukraine.
 return module.exports = require './config.intermine.coffee' if process.env.INTERMINE is '1'

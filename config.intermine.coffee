@@ -53,15 +53,19 @@ module.exports =
                     server: 'fileserver2'
                 'fileserver3 (home)':
                     server: 'fileserver3'
+                'ukraine (machine)':
+                    server: 'ukraine'
                 'ukraine (paas)':
                     server: 'ukraine'
                 'newvegas (radek)':
                     server: 'newvegas'
                 'kermit (julie)':
                     server: 'kermit'
+                'squirrel (alex)':
+                    server: 'squirrel'
 
         httping:
-            command: 'httping <%- @url %> -c 1'
+            command: 'httping <%- @url %> -c 1 -s'
             success: '1 connects, 1 ok, 0.00% failed'
             jobs:
                 'cdn':
@@ -96,3 +100,10 @@ module.exports =
                     url: 'http://intermine.github.io/intermine.org'
                 'intermine docs':
                     url: 'http://intermine.readthedocs.org/en/latest'
+
+        git:
+            command: 'git ls-remote <%- @repo %>'
+            success: 'refs/heads/master'
+            jobs:
+                'intermine (github)':
+                    repo: 'git://github.com/intermine/intermine.git'
