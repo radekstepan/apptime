@@ -48,3 +48,21 @@ Not required. Can be a string or a `RegExp` that will be used to check if comman
 
 #####handlers.jobs
 Keys represent names of servers. The values are arguments to be passed to the commands (see above).
+
+##Client-side app
+
+Install dev dependency (`component`):
+
+```bash
+$ npm install -d
+```
+
+Install components:
+```bash
+$ (cd src/dashboard/app ; ../../../node_modules/.bin/component install)
+```
+
+Re-build the sources:
+```bash
+$ coffee src/dashboard/build.coffee
+```

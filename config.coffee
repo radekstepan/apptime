@@ -1,3 +1,4 @@
+#!/usr/bin/env coffee
 module.exports =
     
     # How often to check (in minutes).

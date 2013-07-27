@@ -1,0 +1,21 @@
+{
+    "name": "app",
+    "main": "app.js",
+    "dependencies": {
+        "necolas/normalize.css": "*",
+        "component/jquery": "*",
+        "nathan7/memoize": "*",
+        "visionmedia/superagent": "*",
+        "gorillatron/extend": "*",
+        "component/tip": "*",
+        "component/aurora-tip": "*"
+    },
+    "scripts": [
+        "app.coffee",
+        "template.eco"
+    ],
+    "styles": [
+        "style.styl",
+        "fonts.css"
+    ]
+}

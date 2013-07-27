@@ -34,22 +34,22 @@
                                 <tr>
                                     <th>
                                         <% if latest.up: %>
-                                            <div class="tipped green circle" original-title="Up"></div>
+                                            <div class="tipped green circle" title="Up"></div>
                                         <% else: %>
-                                            <div class="tipped red circle" original-title="Down"></div>
+                                            <div class="tipped red circle" title="Down"></div>
                                         <% end %>
-                                        <h2 class="tipped" original-title="<%= handler %>"><%= name %></h2>
+                                        <h2 class="tipped" title="<%= handler %>"><%= name %></h2>
                                     </th>
                                     <% for column, downtime of history: %>
                                         <td class="column<%= column %>">
                                             <% if downtime is 0: %>
-                                                <div class="tipped green circle" original-title="No downtime"></div>
+                                                <div class="tipped green circle" title="No downtime"></div>
                                             <% else: %>
                                                 <!-- more than 30m? -->
                                                 <% if downtime < 1800: %>
-                                                    <div class="tipped orange circle" original-title="Down for <%= @toMinutes downtime %>"></div>
+                                                    <div class="tipped orange circle" title="Down for <%= @toMinutes downtime %>"></div>
                                                 <% else: %>
-                                                    <div class="tipped red circle" original-title="Down for <%= @toMinutes downtime %>"></div>
+                                                    <div class="tipped red circle" title="Down for <%= @toMinutes downtime %>"></div>
                                                 <% end %>
                                             <% end %>
                                         </td>

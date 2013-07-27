@@ -13,12 +13,15 @@
         "async": "~0.2.9",
         "union": "~0.3.7",
         "node-logging": "~0.1.6",
-        "stylus": "~0.34.1",
         "moment": "~2.1.0",
         "connect": "~2.8.4",
-        "apps-a-middleware": "~1.2.2"
+        "apps-a-middleware": "~0.2.2"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "component": "~0.17.0",
+        "component-builder": "~0.9.0",
+        "stylus": "~0.34.1"
+    },
     "scripts": {
         "start": "index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -32,6 +35,5 @@
         "monitor",
         "notifier"
     ],
-    "author": "Radek <rs676@cam.ac.uk>",
-    "license": "BSD"
+    "author": "Radek <rs676@cam.ac.uk>"
 }

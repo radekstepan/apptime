@@ -1,4 +1,4 @@
-/*! normalize.css v2.1.1 | MIT License | git.io/normalize */
+/*! normalize.css v2.1.2 | MIT License | git.io/normalize */
 
 /* ==========================================================================
    HTML5 display definitions
@@ -44,10 +44,12 @@ audio:not([controls]) {
 }
 
 /**
- * Address styling not present in IE 8/9.
+ * Address `[hidden]` styling not present in IE 8/9.
+ * Hide the `template` element in IE, Safari, and Firefox < 22.
  */
 
-[hidden] {
+[hidden],
+template {
     display: none;
 }
 
@@ -56,21 +58,15 @@ audio:not([controls]) {
    ========================================================================== */
 
 /**
- * 1. Prevent system color scheme's background color being used in Firefox, IE,
- *    and Opera.
- * 2. Prevent system color scheme's text color being used in Firefox, IE, and
- *    Opera.
- * 3. Set default font family to sans-serif.
- * 4. Prevent iOS text size adjust after orientation change, without disabling
+ * 1. Set default font family to sans-serif.
+ * 2. Prevent iOS text size adjust after orientation change, without disabling
  *    user zoom.
  */
 
 html {
-    background: #fff; /* 1 */
-    color: #000; /* 2 */
-    font-family: sans-serif; /* 3 */
-    -ms-text-size-adjust: 100%; /* 4 */
-    -webkit-text-size-adjust: 100%; /* 4 */
+    font-family: sans-serif; /* 1 */
+    -ms-text-size-adjust: 100%; /* 2 */
+    -webkit-text-size-adjust: 100%; /* 2 */
 }
 
 /**
@@ -84,6 +80,14 @@ body {
 /* ==========================================================================
    Links
    ========================================================================== */
+
+/**
+ * Remove the gray background color from active links in IE 10.
+ */
+
+a {
+    background: transparent;
+}
 
 /**
  * Address `outline` inconsistency between Chrome and other browsers.
@@ -399,4 +403,254 @@ textarea {
 table {
     border-collapse: collapse;
     border-spacing: 0;
+}
+
+
+
+
+
+
+.tip {
+  position: absolute;
+  padding: 5px;
+  z-index: 1000;
+  /* default offset for edge-cases: https://github.com/component/tip/pull/12 */
+  top: 0;
+  left: 0;
+}
+
+/* effects */
+
+.tip.fade {
+  transition: opacity 100ms;
+  -moz-transition: opacity 100ms;
+  -webkit-transition: opacity 100ms;
+}
+
+.tip-hide {
+  opacity: 0;
+}
+
+.tip {
+  font-size: 11px;
+}
+
+.tip-inner {
+  background-color: rgba(0,0,0,.75);
+  color: #fff;
+  padding: 8px 10px 7px 10px;
+  text-align: center;
+}
+
+.tip-inner {
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+}
+
+.tip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  line-height: 0;
+  border: 5px dashed rgba(0,0,0,.75);
+}
+
+.tip-arrow-north { border-bottom-color: rgba(0,0,0,.75) }
+.tip-arrow-south { border-top-color: rgba(0,0,0,.75) }
+.tip-arrow-east { border-left-color: rgba(0,0,0,.75) }
+.tip-arrow-west { border-right-color: rgba(0,0,0,.75) }
+
+.tip-north .tip-arrow,
+.tip-north-east .tip-arrow,
+.tip-north-west .tip-arrow {
+  top: 0px;
+  left: 50%;
+  margin-left: -5px;
+  border-bottom-style: solid;
+  border-top: none;
+  border-left-color: transparent;
+  border-right-color: transparent
+}
+
+.tip-south .tip-arrow,
+.tip-south-east .tip-arrow,
+.tip-south-west .tip-arrow {
+  bottom: 0;
+  left: 50%;
+  margin-left: -5px;
+  border-top-style: solid;
+  border-bottom: none;
+  border-left-color: transparent;
+  border-right-color: transparent
+}
+
+.tip-east .tip-arrow {
+  right: 0;
+  top: 50%;
+  margin-top: -5px;
+  border-left-style: solid;
+  border-right: none;
+  border-top-color: transparent;
+  border-bottom-color: transparent
+}
+
+.tip-west .tip-arrow {
+  left: 0;
+  top: 50%;
+  margin-top: -5px;
+  border-right-style: solid;
+  border-left: none;
+  border-top-color: transparent;
+  border-bottom-color: transparent
+}
+
+.tip-north-west .tip-arrow,
+.tip-south-west .tip-arrow {
+  left: 15px;
+}
+
+.tip-north-east .tip-arrow,
+.tip-south-east .tip-arrow {
+  left: 85%;
+}
+
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Source Sans Pro'), local('SourceSansPro-Regular'),
+    url('/fonts/SourceSansPro-Regular.woff') format('woff');
+}
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 600;
+    src: local('Source Sans Pro Semibold'), local('SourceSansPro-Semibold'),
+    url('/fonts/SourceSansPro-Semibold.woff') format('woff');
+}
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'),
+    url('/fonts/SourceSansPro-Bold.woff') format('woff');
+}
+body {
+  background: url("/bg.png");
+  font-family: 'Source Sans Pro', sans-serif;
+}
+.wrapper {
+  padding-bottom: 30px;
+}
+.box {
+  background: #fff;
+  margin: 0 auto;
+  width: 800px;
+  border-radius: 4px;
+  box-shadow: 0px 1px 4px rgba(0,0,0,0.29);
+}
+header {
+  width: 800px;
+  margin: 0 auto;
+}
+header h1 {
+  color: #333;
+  margin: 0;
+  padding: 10px 15px 15px 15px;
+  display: inline-block;
+  font-size: 30px;
+}
+article {
+  padding: 20px;
+}
+article.errors h2 {
+  color: #ff5050;
+}
+article.errors ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+article.errors ul li:after {
+  content: ".";
+  display: inline-block;
+  line-height: 30px;
+}
+table {
+  width: 100%;
+}
+table thead tr {
+  border-bottom: 2px solid #eceef2;
+}
+table thead h3 {
+  color: #689cf0;
+  font-size: 16px;
+  text-transform: uppercase;
+  margin: 0;
+}
+table thead h4 {
+  color: #ada9a9;
+  font-size: 12px;
+  margin: 10px 0;
+}
+table tbody .circle {
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  background-image: url("/status-lights.png");
+  cursor: pointer;
+}
+table tbody .circle.red {
+  background-position: 0 0;
+}
+table tbody .circle.orange {
+  background-position: 77px 0;
+}
+table tbody .circle.green {
+  background-position: 37px 0;
+}
+table tbody th {
+  text-align: left;
+}
+table tbody th .circle {
+  margin-right: 10px;
+  display: inline-block;
+}
+table tbody th h2 {
+  color: #333;
+  font-size: 16px;
+  display: inline-block;
+  margin: 8px 0;
+  vertical-align: top;
+}
+table tbody td {
+  padding: 20px 0;
+  width: 10%;
+  position: relative;
+}
+table tbody td:after {
+  position: absolute;
+  background: #eff0f3;
+  width: 100%;
+  height: 1px;
+  content: "";
+  display: block;
+  top: 50%;
+}
+table tbody td.column0:after {
+  width: 50%;
+  right: 0;
+}
+table tbody td.column6:after {
+  width: 50%;
+  left: 0;
+}
+table tbody td .circle {
+  margin: 0 auto;
+  z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -18px;
 }

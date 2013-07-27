@@ -3,17 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>apptime</title>
-    <style>
-    html { background: url('bg.png') !important }
-    </style>
-    <script src='intermine.api.js'></script>
-    <script src='intermine.apps-a.js'></script>
-    <script>
-    (function() {
-        var client = new intermine.appsA(document.location.href);
-        client.load('dashboard', 'body');
-    })();
-    </script>
+    
+    <link href="build.css" media="all" rel="stylesheet" type="text/css" />
+    
+    <script src="build.js"></script>
 </head>
-<body></body>
+<body>
+    <script>require('app').call(null);</script>
+</body>
 </html>
