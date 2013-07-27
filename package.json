@@ -1,6 +1,6 @@
 {
     "name": "apptime",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Uptime monitoring linked to a mailer",
     "main": "index.js",
     "dependencies": {
@@ -14,8 +14,7 @@
         "union": "~0.3.7",
         "node-logging": "~0.1.6",
         "moment": "~2.1.0",
-        "connect": "~2.8.4",
-        "apps-a-middleware": "~0.2.2"
+        "connect": "~2.8.4"
     },
     "devDependencies": {
         "component": "~0.17.0",

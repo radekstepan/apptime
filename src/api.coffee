@@ -2,7 +2,6 @@
 path       = require 'path'
 flatiron   = require 'flatiron'
 connect    = require 'connect' 
-middleware = require 'apps-a-middleware'
 
 # Root dir.
 dir = path.resolve __dirname, '../'
@@ -15,11 +14,6 @@ app.use flatiron.plugins.http,
     before: [
         # Static file serving.
         connect.static dir + '/public'
-        # Apps/A.
-        middleware
-            apps: [
-                'file://../../../../src' # interesting...
-            ]
     ]
 
 # API toor.
