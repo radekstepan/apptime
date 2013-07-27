@@ -63,7 +63,7 @@ module.exports =
                     server: 'squirrel'
 
         httping:
-            command: 'httping <%- @url %> -c 1 -s'
+            command: 'httping <%- @url %> -c 1 -s -o 100,101,102,200,201,202,203,204,206,300,301,302,303,304,305,307'
             success: '1 connects, 1 ok, 0.00% failed'
             jobs:
                 'cdn':

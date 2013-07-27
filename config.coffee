@@ -41,11 +41,15 @@ module.exports =
                     server: 'ukraine.sysbiol.cam.ac.uk'
 
         httping:
-            command: 'httping <%- @url %> -c 1 -s'
+            command: 'httping <%- @url %> -c 1 -s -o 100,101,102,200,201,202,203,204,206,300,301,302,303,304,305,307'
             success: '1 connects, 1 ok, 0.00% failed'
             jobs:
                 'beta.flymine.org':
                     url: 'http://beta.flymine.org'
+                'intermine.org':
+                    url: 'http://intermine.github.io/intermine.org'
+                'intermine docs':
+                    url: 'http://intermine.readthedocs.org/en/latest'
 
         # An example of a running bash scripts.
         bash:
