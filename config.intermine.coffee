@@ -53,8 +53,6 @@ module.exports =
                     server: 'fileserver2'
                 'fileserver3 (home)':
                     server: 'fileserver3'
-                'ukraine (machine)':
-                    server: 'ukraine'
                 'ukraine (paas)':
                     server: 'ukraine'
                 'newvegas (radek)':
