@@ -107,34 +107,31 @@ exports.one = ({ handler, name, command, success }, done) ->
                 # Which day? Our "id".
                 day = date.format time, 'YYYY-MM-DD'
 
-                # Check/save this.
-                save = _.extend({}, me, { day: day })
-
-                # Do we have something already?
-                async.waterfall [ (cb) ->
-                    jb.findOne 'downtime', save, cb
-
-                # If we have an object, we do not need to init.
-                , (obj, cb) ->
-                    return cb null if obj
-                    # Save the first downtime of today boosting with a length.
-                    jb.save 'downtime', _.extend(save,
+                # If we already have a downtime today...
+                jb.update 'downtime', _.extend({}, me,
+                    day: day
+                    # ...just update our time.
+                    $set:
+                        time: time
+                    # ...otherwise save the whole shebang
+                    $upsert: _.extend({}, me,
+                        day: day
+                        time: time
                         length: length
-                        time: time # so we can efficiently retrieve a range
-                    ), cb
-
-                ], cb
+                    )
+                ), (err, updated) ->
+                    cb err
 
         # Add a time to a downtime event for timeA day.
         addDowntime = (timeA, timeB) ->
             (cb) ->
-                # An inc update.
+                # An inc update (do not update time!).
                 jb.update 'downtime', _.extend({}, me,
                     day: date.format timeA, 'YYYY-MM-DD'
                     $inc:
                         length: moment(timeB).diff(moment(timeA), 'seconds')
                 ), (err, updated) ->
-                    cb null
+                    cb err
         
         # ----------- THE LOGIC -----------
 
