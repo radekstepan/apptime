@@ -1,6 +1,6 @@
 {
     "name": "apptime",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "description": "Uptime monitoring linked to a mailer",
     "main": "index.js",
     "dependencies": {

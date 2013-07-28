@@ -13,11 +13,13 @@ module.exports = ->
     xhr '/api', (res) ->
         data = JSON.parse res.response
 
-        document.body.innerHTML = table _.extend data,
-            toMinutes: _.memoize (seconds) ->
-                Math.ceil(seconds / 60) + 'm'
-        
-        tip('.tipped')
+        try           
+            document.body.innerHTML = table _.extend data,
+                toMinutes: _.memoize (seconds) ->
+                    Math.ceil(seconds / 60) + 'm'
+            tip('.tipped')
+        catch err
+            trouble errors: [ err.toString() ]
     
     , (err) ->
         # See the network response for more details.

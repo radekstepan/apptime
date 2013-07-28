@@ -99,10 +99,23 @@ module.exports = (res) ->
             # Save the day.
             days.push date.format(cutoff, 'ddd:DD/M').split(':')
 
+        # Sort by down status, name and handler.
+        arr = []
+        for handler, names of data
+            for name, obj of names
+                arr.push _.extend obj,
+                    handler: handler
+                    name: name
+        arr.sort (a, b) ->
+            return n if n = +a.latest.up - +b.latest.up # down first
+            return n if n = a.name.localeCompare b.name # name alpha
+            return n if n = a.handler.localeCompare b.handler.localeCompare # handler alpha
+            return 0 # won't happen...
+
         # Return.
         cb null,
             days: days
-            data: data
+            data: arr
             up: allUp
 
     ], _.partial respond, res
