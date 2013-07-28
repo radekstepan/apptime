@@ -11,6 +11,20 @@ eco     = require 'eco'
 cs      = require 'coffee-script'
 stylus  = require 'stylus'
 
+# Minifiers.
+minify  =
+    js: (src, cb) ->
+        try
+            cb null, (require('uglify-js').minify(src, 'fromString': yes)).code
+        catch err
+            cb err
+    
+    css: (src, cb) ->
+        try
+            cb null, require('clean-css').process src
+        catch err
+            cb err
+
 dir = path.resolve __dirname, '../../'
 
 # All the custom handlers that we know of.
@@ -77,6 +91,10 @@ builder.use (builder) ->
             # Map to handlers.
             files = _.map files, (file) ->
                 (cb) ->
+                    cb = _.wrap cb, (fn, err) ->
+                        log.bad file if err
+                        fn err
+
                     suffix = file.split('.').pop()
                     return fn(pkg, file, cb) if fn = obj[suffix]
                     cb null
@@ -92,9 +110,14 @@ async.waterfall [ (cb) ->
 
 # Write.
 , (res, cb) ->
+    write = (where, what, cb) ->
+        minify[where] what, (err, out) ->
+            return cb err if err
+            fs.writeFile "#{dir}/public/build.#{where}", out, cb
+
     async.parallel [
-        _.partial fs.writeFile, dir + '/public/build.js', res.require + res.js
-        _.partial fs.writeFile, dir + '/public/build.css', res.css
+        _.partial write, 'js', res.require + res.js
+        _.partial write, 'css', res.css
     ], cb
 
 # Done.

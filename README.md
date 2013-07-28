@@ -51,7 +51,7 @@ Keys represent names of servers. The values are arguments to be passed to the co
 
 ##Client-side app
 
-Install dev dependency (`component`):
+Install dev dependencies (`component` etc.):
 
 ```bash
 $ npm install -d

@@ -1,0 +1,52 @@
+<div class="wrapper">
+    <header>
+        <h1>apptime</h1>
+    </header>
+    <div class="box">
+        <article>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <% for [ day, date ] in @days: %>
+                            <th>
+                                <h3><%= day %></h3>
+                                <h4><%= date %></h4>
+                            </th>
+                        <% end %>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for handler, names of @data: %>
+                        <% for name, { latest, history } of names: %>
+                            <tr>
+                                <th>
+                                    <% if latest.up: %>
+                                        <div class="tipped green circle" title="Up"></div>
+                                    <% else: %>
+                                        <div class="tipped red circle" title="Down"></div>
+                                    <% end %>
+                                    <h2 class="tipped" title="<%= handler %>"><%= name %></h2>
+                                </th>
+                                <% for column, downtime of history: %>
+                                    <td class="column<%= column %>">
+                                        <% if downtime is 0: %>
+                                            <div class="tipped green circle" title="No downtime"></div>
+                                        <% else: %>
+                                            <!-- more than 30m? -->
+                                            <% if downtime < 1800: %>
+                                                <div class="tipped orange circle" title="Down for <%= @toMinutes downtime %>"></div>
+                                            <% else: %>
+                                                <div class="tipped red circle" title="Down for <%= @toMinutes downtime %>"></div>
+                                            <% end %>
+                                        <% end %>
+                                    </td>
+                                <% end %>
+                            </tr>
+                        <% end %>
+                    <% end %>
+                </tbody>
+            </table>
+        </article>
+    </div>
+</div>

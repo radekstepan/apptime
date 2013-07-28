@@ -1,0 +1,15 @@
+<div class="wrapper">
+    <header>
+        <h1>apptime</h1>
+    </header>
+    <div class="box">
+        <article class="errors">
+            <h2>Sadness &hellip;</h2>
+            <ul>
+            <% for error in @errors: %>
+                <li><%- error %></li>
+            <% end %>
+            </ul>
+        </article>
+    </div>
+</div>

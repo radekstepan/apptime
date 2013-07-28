@@ -1,19 +1,25 @@
-request = require 'superagent'
-tip     = require 'tip'
+xhr = require 'xhr'
+tip = require 'tip'
 _ =
     memoize: require 'memoize'
     extend:  require 'extend'
+    map:     require 'map'
 
-template = require './template'
+[ table, error ] = _.map [ './table', './error' ], require
 
 module.exports = ->
-    request.get '/api', (res) ->
-        return document.body.innerHTML = res.text if res.statusType isnt 2
+    trouble = (errors) -> document.body.innerHTML = error errors
 
-        data = JSON.parse res.text
+    xhr '/api', (res) ->
+        data = JSON.parse res.response
 
-        document.body.innerHTML = template _.extend data,
+        return trouble data if data.errors
+
+        document.body.innerHTML = table _.extend data,
             toMinutes: _.memoize (seconds) ->
                 Math.ceil(seconds / 60) + 'm'
         
         tip('.tipped')
+    
+    , (err) ->
+        trouble errors: [ err.message ]
