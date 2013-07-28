@@ -167,7 +167,7 @@ exports.one = ({ handler, name, command, success }, done) ->
                 # Add downtime ms to yesterday counter.
                 addDowntime(previous.time, startOfToday)
                 # Init downtime ms for today.
-                initDowntime(current.time)
+                initDowntime(startOfToday)
             ], cb
 
         ], cb
