@@ -3,7 +3,6 @@
     "main": "app.js",
     "dependencies": {
         "matthewp/xhr": "*",
-        "nathan7/memoize": "*",
         "component/map": "*",
         "gorillatron/extend": "*",
         "necolas/normalize.css": "*",

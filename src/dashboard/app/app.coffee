@@ -2,7 +2,6 @@ xhr  = require 'xhr'
 tip  = require 'tip'
 Clip = require 'clipboard-dom'
 _ =
-    memoize: require 'memoize'
     extend:  require 'extend'
     map:     require 'map'
 
@@ -37,7 +36,11 @@ module.exports = ->
             return trouble err if err
 
             data = _.extend data,
-                toMinutes: _.memoize (seconds) ->
+                # Time since now (in seconds).
+                since: (timestamp) ->
+                    (+ new Date - timestamp) / 1e3
+                # Minutes from seconds (cached).
+                toMinutes: (seconds) ->
                     Math.ceil(seconds / 60) + 'm'
 
             table data, (err, html) ->
@@ -51,7 +54,6 @@ module.exports = ->
                 # Copy to clipboard.
                 _.map document.querySelectorAll('.clippy'), (el) -> 
                     clip = new Clip el, el.parentNode
-                    clip.on 'complete', (text) -> console.log 'copied text'
                     clip.on 'mousedown', -> clip.text el.title
 
     , (err) ->

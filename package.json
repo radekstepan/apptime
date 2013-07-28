@@ -1,6 +1,6 @@
 {
     "name": "apptime",
-    "version": "0.2.7",
+    "version": "0.2.8",
     "description": "Uptime monitoring linked to a mailer",
     "dependencies": {
         "coffee-script": "~1.6.2",

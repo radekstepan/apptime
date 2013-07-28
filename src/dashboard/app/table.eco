@@ -23,7 +23,7 @@
                                 <% if latest.up: %>
                                     <div class="tipped green circle" title="Up"></div>
                                 <% else: %>
-                                    <div class="tipped red circle" title="Down"></div>
+                                    <div class="tipped red circle" title="Down for <%= @toMinutes @since latest.since %>"></div>
                                 <% end %>
                                 <div class="name tipped" title="Click to copy: `<%= command %>`">
                                     <h2 class="clippy" title="<%= command %>"><%= name %></h2>

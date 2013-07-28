@@ -93,6 +93,8 @@ module.exports = (res) ->
             for { handler, name, length, time } in downtimes when time < cutoff
                 l += 1 # we will remove this many
                 data[handler]?[name].history[band] += length
+                # Is this the latest downtime for a down machine?
+                data[handler][name].latest.since = time unless data[handler][name].latest.up
 
             # Remove them from the original pile.
             downtimes = downtimes.slice l
