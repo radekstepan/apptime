@@ -3,14 +3,15 @@
 async = require 'async'
 log   = require 'node-logging'
 
-config = require './config.coffee' # config
-jb     = require './db.coffee'     # db handle
-jobs   = require './jobs.coffee'   # jobs to run from config
-mailer = require './mailer.coffee' # mailer
-utils  = require './utils.coffee'  # utilities
-date   = require './date.coffee'   # date utilities
-job    = require './job.coffee'    # run one job
-app    = require './api.coffee'    # api app
+cache   = require './cache.coffee'  # save to display next
+config  = require './config.coffee' # config
+jb      = require './db.coffee'     # db handle
+{ one } = require './job.coffee'    # one job to run
+jobs    = require './jobs.coffee'   # jobs to run from config
+mailer  = require './mailer.coffee' # mailer
+utils   = require './utils.coffee'  # utilities
+date    = require './date.coffee'   # date utilities
+app     = require './api.coffee'    # api app
 
 # Start flatiron dash app.
 async.waterfall [ app
@@ -54,8 +55,8 @@ async.waterfall [ app
     # All jobs in parallel...
     q = async.queue (noop, done) ->
         log.dbg 'Running a batch'        
-        job.errors([]) # clear all previous errors
-        async.each jobs, job.one, ->
+        cache.clear() # clear all previous errors
+        async.each jobs, one, ->
             log.dbg 'Batch done'
             done null
     , 1 # ... with concurrency of 1...

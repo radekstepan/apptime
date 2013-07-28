@@ -2,23 +2,41 @@
 { _ }  = require 'lodash'
 moment = require 'moment'
 async  = require 'async'
+log    = require 'node-logging'
 
-utils      = require './utils.coffee' # utilities
-{ errors } = require './job.coffee'   # run one job
-jb         = require './db.coffee'    # db handle
-jobs       = require './jobs.coffee'  # jobs to run from config
-date       = require './date.coffee'  # date utilities
+cache = require './cache.coffee' # save to display next
+utils = require './utils.coffee' # utilities
+jb    = require './db.coffee'    # db handle
+jobs  = require './jobs.coffee'  # jobs to run from config
+date  = require './date.coffee'  # date utilities
+
+respond = (res, err, json) ->
+    # Oopsy Daisy?
+    if err
+        res.writeHead 500, 'content-type': 'application/json'
+        res.write JSON.stringify errors: ( if _.isArray(err) then err else [ err.toString() ] )
+    else
+        # Cache it.
+        cache.save json
+        res.writeHead 200, 'content-type': 'application/json'
+        res.write JSON.stringify json
+    
+    res.end()
 
 # Handle an HTTP request.
 module.exports = (res) ->
+    # Skip?
+    return respond res, null, json if json = cache.get()
+
+    log.dbg 'Cold cache'
+
     # When does today end? Cutoff on 7 days before that.
     cutoff = moment((new Date()).setHours(23,59,59,999)).subtract('days', 7)
 
     # Any errors awaiting for us?
     async.waterfall [ (cb) ->
-        err = errors()
-        return cb null if !err.length
-        cb err
+        return cb errors if (errors = cache.getErrors()).length
+        cb null
     
     , (cb) ->
         # Find all the events.
@@ -87,10 +105,4 @@ module.exports = (res) ->
             data: data
             up: allUp
 
-    ], (err, json) ->
-        _.extend(json ?= {}, errors: if _.isArray(err) then err else [ err.toString() ]) if err
-
-        res.writeHead 200, 'content-type': 'application/json'
-        res.write JSON.stringify json
-
-        res.end()
+    ], _.partial respond, res

@@ -13,8 +13,6 @@ module.exports = ->
     xhr '/api', (res) ->
         data = JSON.parse res.response
 
-        return trouble data if data.errors
-
         document.body.innerHTML = table _.extend data,
             toMinutes: _.memoize (seconds) ->
                 Math.ceil(seconds / 60) + 'm'
@@ -22,4 +20,5 @@ module.exports = ->
         tip('.tipped')
     
     , (err) ->
+        # See the network response for more details.
         trouble errors: [ err.message ]

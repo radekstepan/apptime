@@ -9,19 +9,18 @@ moment     = require 'moment'
 # Root dir.
 dir = path.resolve __dirname, '../'
 
+cache  = require './cache.coffee'  # save to display next
 config = require './config.coffee' # config
 jb     = require './db.coffee'     # db handle
 date   = require './date.coffee'   # date utilities
 mailer = require './mailer.coffee' # mailer
 
-# If errors happen during a job, save them here so that dash can display them.
-errors = []
+# If errors happen during a job, save them in the cache.
 log.err = _.wrap log.err, (fn, message) ->
-    fn message # log it
-    errors.push message.toString() # save it
-
-# Array by reference.
-exports.errors = (arr) -> if _.isArray(arr) then errors = arr else errors
+    # Log.
+    fn message
+    # Save.
+    cache.error message.toString()
 
 # Process one job.
 exports.one = ({ handler, name, command, success }, done) ->
