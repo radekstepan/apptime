@@ -1,6 +1,6 @@
 {
     "name": "apptime",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "Uptime monitoring linked to a mailer",
     "main": "index.js",
     "dependencies": {
@@ -29,12 +29,17 @@
     },
     "repository": {
         "type": "git",
-        "url": "git@github.com:radekstepan/upp.git"
+        "url": "git@github.com:radekstepan/apptime.git"
     },
     "keywords": [
         "uptime",
         "monitor",
+        "monitoring",
+        "check",
+        "mailer",
+        "status",
         "notifier"
     ],
+    "readmeFilename": "README.md",
     "author": "Radek <rs676@cam.ac.uk>"
 }

@@ -52,7 +52,8 @@ async.waterfall [ app
 
 # Start monitoring.
 ], (err) ->
-    throw err if err
+    log.bad err.toString() if err # hopefully not too severe...
+    
     log.dbg 'apptime'.bold + ' dashboard online'
 
     # All jobs in parallel...

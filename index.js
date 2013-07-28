@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 require('coffee-script');
-require('./src/main.coffee');
+require('./src/main.coffee'); // no API exported

@@ -8,11 +8,12 @@ Server uptime monitoring linked to a mailer. You can run any type of command to 
 
 ```bash
 $ sudo apt-get install g++ zlib1g zlib1g-dev autoconf # for ejdb
-$ git clone https://github.com/radekstepan/apptime.git # clone repo
-$ cd apptime ; pico config.coffee # edit config file
-$ npm install # install deps
-$ PORT=6661 node index.js # you can leave the port empty
+$ npm install apptime
+$ pico config.coffee # edit config file
+$ PORT=6661 CONFIG=config.coffee apptime
 ```
+
+You can leave the `PORT` empty. If you do not provide a `CONFIG` it will default to the example one in the app directory. The path to `CONFIG` is relative to your current `PWD` unless the path starts with a `/` in which case it is absolute.
 
 ##Config
 
