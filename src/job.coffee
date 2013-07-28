@@ -101,26 +101,33 @@ exports.one = ({ handler, name, command, success }, done) ->
                     # Mail it.
                     mailer email, cb
 
-        # Start a downtime event of 1s, maybe.
+        # Start a downtime event of 1s when previously UP.
         initDowntime = (time, length=1) ->
             (cb) ->
                 # Which day? Our "id".
                 day = date.format time, 'YYYY-MM-DD'
 
+                find = _.extend({}, me, { day: day })
+
                 # If we already have a downtime today...
-                jb.update 'downtime', _.extend({}, me,
-                    day: day
-                    # ...just update our time.
-                    $set:
-                        time: time
+                jb.findOne 'downtime', find, (err, obj) ->
+                    return cb err if err
+
+                    # ...just update our since time (for latest stats).
+                    if obj
+                        jb.update 'downtime', _.extend(find,
+                            $set:
+                                since: time
+                        ), (err) ->
+                            cb err
+                    
                     # ...otherwise save the whole shebang
-                    $upsert: _.extend({}, me,
-                        day: day
-                        time: time
-                        length: length
-                    )
-                ), (err, updated) ->
-                    cb err
+                    else
+                        jb.save 'downtime', _.extend(find,
+                            time: time     # used to efficiently filter history
+                            since: time    # used to show offline since status
+                            length: length # indicates total downtime for the day
+                        ), cb
 
         # Add a time to a downtime event for timeA day.
         addDowntime = (timeA, timeB) ->

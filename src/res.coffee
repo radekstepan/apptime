@@ -43,10 +43,10 @@ module.exports = (res) ->
         async.parallel [ (cb) ->
             jb.find 'downtime',
                 time:
-                    $gt: +cutoff
+                    $gt: +cutoff # we could filter on day but this is nicer
             ,
                 $orderby:
-                    time: 1 # upward
+                    time: 1 # up up and away
             , _.partial utils.arrayize, cb
 
         # And also the latest statei.
@@ -90,11 +90,11 @@ module.exports = (res) ->
 
             # Go through all events below the cutoff.
             l = 0
-            for { handler, name, length, time } in downtimes when time < cutoff
+            for { handler, name, length, time, since } in downtimes when time < cutoff
                 l += 1 # we will remove this many
-                data[handler]?[name].history[band] += length
+                data[handler][name].history[band] += length
                 # Is this the latest downtime for a down machine?
-                data[handler][name].latest.since = time unless data[handler][name].latest.up
+                data[handler][name].latest.since = since unless data[handler][name].latest.up
 
             # Remove them from the original pile.
             downtimes = downtimes.slice l

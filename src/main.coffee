@@ -11,10 +11,10 @@ jobs    = require './jobs.coffee'   # jobs to run from config
 mailer  = require './mailer.coffee' # mailer
 utils   = require './utils.coffee'  # utilities
 date    = require './date.coffee'   # date utilities
-app     = require './api.coffee'    # api app
+server  = require './server.coffee' # server app
 
-# Start flatiron dash app.
-async.waterfall [ app
+# Start flatiron dash app server.
+async.waterfall [ server
 
 # Integrity check.
 , (cb) ->

@@ -1,6 +1,7 @@
-xhr  = require 'xhr'
-tip  = require 'tip'
-Clip = require 'clipboard-dom'
+xhr   = require 'xhr'
+ws    = do require 'websocket'
+tip   = require 'tip'
+Clip  = require 'clipboard-dom'
 _ =
     extend:  require 'extend'
     map:     require 'map'
@@ -31,6 +32,11 @@ parse = (string, cb) ->
 
 module.exports = ->
 
+    # Listen for messages.
+    ws.on 'message', (msg) ->
+        console.log msg.data
+
+    # Get all the data.
     xhr '/api', (res) ->
         parse res.response, (err, data) ->
             return trouble err if err
@@ -39,7 +45,7 @@ module.exports = ->
                 # Time since now (in seconds).
                 since: (timestamp) ->
                     (+ new Date - timestamp) / 1e3
-                # Minutes from seconds (cached).
+                # Minutes from seconds.
                 toMinutes: (seconds) ->
                     Math.ceil(seconds / 60) + 'm'
 

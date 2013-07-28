@@ -3,6 +3,7 @@
     "main": "app.js",
     "dependencies": {
         "matthewp/xhr": "*",
+        "stagas/websocket": "*",
         "component/map": "*",
         "gorillatron/extend": "*",
         "necolas/normalize.css": "*",
