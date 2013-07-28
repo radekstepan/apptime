@@ -1,5 +1,5 @@
 body
-    background: url('/bg.png')
+    background: url('/img/bg.png')
     font-family: 'Source Sans Pro', sans-serif
 
 .wrapper
@@ -64,7 +64,7 @@ table
             border-radius: 50%
             width: 36px
             height: 36px
-            background-image: url('/status-lights.png')
+            background-image: url('/img/status-lights.png')
             cursor: pointer
 
             &.red
@@ -83,12 +83,17 @@ table
                 margin-right: 10px
                 display: inline-block
 
-            h2
-                color: #333
-                font-size: 16px
+            .name
+                position: relative
                 display: inline-block
-                margin: 8px 0
                 vertical-align: top
+                margin: 8px 0
+
+                h2
+                    color: #333
+                    font-size: 16px
+                    display: block
+                    margin: 0
 
         td
             padding: 20px 0

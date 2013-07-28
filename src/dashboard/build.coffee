@@ -105,6 +105,7 @@ builder.use (builder) ->
 
 # Build.
 async.waterfall [ (cb) ->
+    builder.copyAssetsTo '/tmp' # go to hell
     builder.build (err, res) ->
         cb err, res
 

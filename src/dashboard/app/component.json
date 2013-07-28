@@ -2,13 +2,14 @@
     "name": "app",
     "main": "app.js",
     "dependencies": {
-        "necolas/normalize.css": "*",
+        "matthewp/xhr": "*",
         "nathan7/memoize": "*",
         "component/map": "*",
-        "matthewp/xhr": "*",
         "gorillatron/extend": "*",
+        "necolas/normalize.css": "*",
         "component/tip": "*",
-        "component/aurora-tip": "*"
+        "component/aurora-tip": "*",
+        "component/clipboard-dom": "*"
     },
     "scripts": [
         "app.coffee",

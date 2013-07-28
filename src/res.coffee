@@ -76,11 +76,12 @@ module.exports = (res) ->
 
         # Init the 7 bands as unknowns (or maybe we don't have the data) for each current config.
         data = {} ; days = []
-        for { handler, name } in jobs
+        for { handler, name, command } in jobs
             data[handler] ?= {}
             data[handler][name] =
                 latest: map[handler]?[name]
                 history: ( 0 for i in [0...7] )
+                command: command
 
         # Sliding window biz.
         for band in [0...7]

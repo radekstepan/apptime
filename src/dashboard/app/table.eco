@@ -17,7 +17,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% for { handler, name, latest, history } in @data: %>
+                    <% for { handler, name, command, latest, history } in @data: %>
                         <tr>
                             <th>
                                 <% if latest.up: %>
@@ -25,7 +25,9 @@
                                 <% else: %>
                                     <div class="tipped red circle" title="Down"></div>
                                 <% end %>
-                                <h2 class="tipped" title="<%= handler %>"><%= name %></h2>
+                                <div class="name tipped" title="Click to copy: `<%= command %>`">
+                                    <h2 class="clippy" title="<%= command %>"><%= name %></h2>
+                                </div>
                             </th>
                             <% for column, downtime of history: %>
                                 <td class="column<%= column %>">
