@@ -9,15 +9,15 @@ Server uptime monitoring linked to a mailer. You can run any type of command to 
 ```bash
 $ sudo apt-get install g++ zlib1g zlib1g-dev autoconf # for ejdb
 $ npm install apptime
-$ pico config.coffee # edit config file
-$ PORT=6661 CONFIG=config.coffee apptime
+$ pico /tmp/config.coffee # edit config file
+$ PORT=6661 CONFIG=/tmp/config.coffee apptime
 ```
 
-You can leave the `PORT` empty. If you do not provide a `CONFIG` it will default to the example one in the app directory. The path to `CONFIG` is relative to your current `PWD` unless the path starts with a `/` in which case it is absolute.
+You can leave the `PORT` empty. If you do not provide a `CONFIG` it will default to the example one in the app directory. The path to `CONFIG` is relative to the app directory unless the path starts with a `/` in which case it is absolute.
 
 ##Config
 
-The `config.coffee` file (think of it as a JSON file on steroids) exports the following:
+The `.coffee` file (think of it as a JSON file on steroids) exports the following:
 
 #####timeout
 How often to monitor the servers (in minutes). Each batch will run in a queue with a concurrency of 1.

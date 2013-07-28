@@ -5,7 +5,7 @@ eco   = require 'eco'
 
 # Provided path?
 if p = process.env.CONFIG
-    p = path.resolve(process.env.PWD, p) unless p[0] is '/'
+    p = path.resolve(__dirname, '..', p) unless p[0] is '/'
 else
     p = path.resolve __dirname, '../config.example.coffee'
 
