@@ -38,7 +38,10 @@ async.waterfall [ app
 
     # Templatize
     async.parallel [
-        _.partial config.email.templates.subject, { name: 'apptime process', verb: 'was', status: 'DOWN' }
+        _.partial config.email.templates.subject,
+            name: 'apptime process'
+            verb: 'was'
+            status: 'DOWN'
         _.partial config.email.templates.integrity,
             # Since the latest status update.
             since: date.format _.max(arr, 'time').time, 'HH:mm:ss on ddd'

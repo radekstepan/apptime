@@ -166,8 +166,8 @@ exports.one = ({ handler, name, command, success }, done) ->
             async.parallel [
                 # Add downtime ms to yesterday counter.
                 addDowntime(previous.time, startOfToday)
-                # Add downtime ms to today counter.
-                addDowntime(startOfToday, current.time)
+                # Init downtime ms for today.
+                initDowntime(current.time)
             ], cb
 
         ], cb
