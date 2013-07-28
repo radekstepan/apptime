@@ -28,7 +28,7 @@
     },
     "bin": {
         "apptime": "index.js"
-    }
+    },
     "repository": {
         "type": "git",
         "url": "git@github.com:radekstepan/apptime.git"
