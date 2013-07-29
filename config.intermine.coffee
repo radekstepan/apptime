@@ -12,7 +12,7 @@ module.exports =
         # See `nodemailer` for config.
         fields:
             from: 'apptime bot <flymine.org@gmail.com>'
-            to: 'Radek <radek.stepan@gmail.com>'
+            to: 'InterMine <all@flymine.org>'
         smtp:
             host: 'smtp.gmail.com'
             port: 465
@@ -38,6 +38,8 @@ module.exports =
             jobs:
                 'web0 (apache)':
                     server: 'web0'
+                'web4 (live flymine)':
+                    server: 'web4'
                 'prod1 (production)':
                     server: 'prod1'
                 'prod2 (dev)':
@@ -62,6 +64,20 @@ module.exports =
                     server: 'kermit'
                 'squirrel (alex)':
                     server: 'squirrel'
+                'theleviathan (hm build)':
+                    server: 'theleviathan'
+                'thebehemoth':
+                    server: 'thebehemoth'
+                'theziz':
+                    server: 'theziz'
+                'thedogora':
+                    server: 'thedogora'
+                'themonster':
+                    server: 'themonster'
+                'svn (private git)':
+                    server: 'svn'
+                'dinosaur (blogs)':
+                    server: 'dinosaur'
 
         httping:
             command: 'httping <%- @url %> -c 1 -s -o 100,101,102,200,201,202,203,204,206,300,301,302,303,304,305,307'
