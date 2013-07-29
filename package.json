@@ -21,11 +21,13 @@
         "component-builder": "~0.9.0",
         "stylus": "~0.34.1",
         "uglify-js": "~2.2.5",
-        "clean-css": "~0.4.2"
+        "clean-css": "~0.4.2",
+        "mocha": "~1.12.0",
+        "proxyquire": "~0.4.1"
     },
     "scripts": {
         "start": "index.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "make test"
     },
     "bin": {
         "apptime": "index.js"

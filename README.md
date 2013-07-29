@@ -50,7 +50,7 @@ Not required. Can be a string or a `RegExp` that will be used to check if comman
 #####handlers.jobs
 Keys represent names of servers. The values are arguments to be passed to the commands (see above).
 
-##Client-side app
+##Development
 
 Install dev dependencies (`component` etc.):
 
@@ -58,12 +58,17 @@ Install dev dependencies (`component` etc.):
 $ npm install -d
 ```
 
-Install components:
+Run Mocha tests:
 ```bash
-$ (cd src/dashboard/app ; ../../../node_modules/.bin/component install)
+$ make test
 ```
 
-Re-build the sources:
+Install components:
 ```bash
-$ coffee src/dashboard/build.coffee
+$ make components
+```
+
+Re-build the dashboard app sources (installs components too):
+```bash
+$ make dashboard
 ```

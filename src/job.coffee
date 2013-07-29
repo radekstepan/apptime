@@ -23,7 +23,7 @@ log.err = _.wrap log.err, (fn, message) ->
     cache.error message.toString()
 
 # Process one job.
-exports.one = ({ handler, name, command, success }, done) ->
+module.exports = ({ handler, name, command, success }, done) ->
     # Global.
     previous = null ; current = time: + new Date, up: no
 
